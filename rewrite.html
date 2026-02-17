@@ -22,6 +22,7 @@
                         accent: '#c9a87c',
                         accentHover: '#dbb98d',
                         success: '#5cb88f',
+                        danger: '#e05555',
                     },
                     fontFamily: {
                         display: ['Syne', 'sans-serif'],
@@ -32,7 +33,6 @@
         }
     </script>
     <style>
-        /* (styles unchanged) */
         body {
             font-family: 'DM Sans', sans-serif;
             background-color: #08080c;
@@ -41,7 +41,7 @@
         }
         .app-gradient {
             background: 
-                radial-gradient(ellipse 60% 40% at 50% 0%, rgba(201, 168, 124, 0.05) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 50% 0%, rgba(201, 168, 124, 0.06) 0%, transparent 60%),
                 #08080c;
         }
         .card-glow {
@@ -94,11 +94,32 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .focus-ring:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(201, 168, 124, 0.3);
+        }
+        .toast {
+            animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateX(20px); }
+        }
+        select option {
+            background: #0e0e14;
+            color: #ffffff;
+        }
     </style>
 </head>
 <body class="app-gradient">
-    <!-- Top Navigation (unchanged) -->
-    <nav class="sticky top-0 z-50 bg-bg/90 backdrop-blur-xl border-b border-border">
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2"></div>
+
+    <!-- Top Navigation -->
+    <nav class="sticky top-0 z-40 bg-bg/90 backdrop-blur-xl border-b border-border">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <a href="dashboard.html" class="font-display font-bold text-xl text-white hover:text-accent transition-colors">
@@ -178,7 +199,7 @@
                         Choose Your Intent
                     </label>
                     <div class="relative">
-                        <select id="intent-select" class="input-field w-full px-4 py-3 rounded-xl text-white appearance-none cursor-pointer focus-ring">
+                        <select id="intent-select" class="input-field w-full px-4 py-3 rounded-xl text-white appearance-none cursor-pointer focus-ring pr-10">
                             <option value="flirt">Flirt confidently</option>
                             <option value="stop_chasing">Stop chasing</option>
                             <option value="mysterious">Sound mysterious</option>
@@ -222,7 +243,7 @@
                     <!-- No Credits State -->
                     <div id="no-credits-ui" class="hidden text-center">
                         <div class="bg-danger/10 border border-danger/20 text-danger rounded-xl p-4 mb-4">
-                            You've used all your credits this month.
+                            You have used all your credits this month.
                         </div>
                         <button type="button" class="btn-primary w-full py-4 rounded-xl font-semibold text-bg text-base focus-ring">
                             Upgrade to Continue
@@ -290,60 +311,154 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // ==================== SUPABASE INIT ====================
+        // ==================== CONFIGURATION ====================
         const SUPABASE_URL = 'https://rwcwuugxlfjqxnkwdavt.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3Y3d1dWd4bGZqcXhua3dkYXZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2ODMzMzMsImV4cCI6MjA4NjI1OTMzM30.ZscCHxYa2LWw60yB2XKhbo9b8Qs3iZKeJZYhIzPUifw';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // ==================== SUPABASE CLIENT ====================
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                detectSessionInUrl: true
+            }
+        });
+
+        // ==================== STATE ====================
+        let currentUser = null;
         let userProfile = null;
+        let isLoading = false;
+
+        // ==================== UTILITIES ====================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgColor = type === 'error' ? 'bg-danger/90' : 
+                           type === 'success' ? 'bg-success/90' : 'bg-card';
+            const borderColor = type === 'error' ? 'border-danger' : 
+                               type === 'success' ? 'border-success' : 'border-border';
+            
+            toast.className = `toast ${bgColor} border ${borderColor} px-4 py-3 rounded-xl text-sm text-white shadow-lg max-w-sm`;
+            toast.textContent = message;
+            
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function setLoading(loading) {
+            isLoading = loading;
+            const btn = document.getElementById('rewrite-btn');
+            btn.disabled = loading;
+            
+            if (loading) {
+                btn.innerHTML = `
+                    <svg class="animate-spin h-5 w-5 text-bg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Rewriting...</span>
+                `;
+            } else {
+                btn.innerHTML = `
+                    <span>Rewrite Message</span>
+                    <span class="bg-bg/20 text-xs px-2 py-0.5 rounded-full font-bold">1 Credit</span>
+                `;
+            }
+        }
 
         // ==================== AUTH & INIT ====================
         async function initPage() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) {
-                window.location.href = 'auth.html';
-                return;
+            try {
+                // Check for existing session
+                const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+                
+                if (sessionError) {
+                    console.error('Session error:', sessionError);
+                    redirectToAuth();
+                    return;
+                }
+                
+                if (!session) {
+                    redirectToAuth();
+                    return;
+                }
+
+                currentUser = session.user;
+                
+                // Fetch profile
+                await fetchProfile();
+                
+                // Setup auth state listener
+                supabaseClient.auth.onAuthStateChange((event, session) => {
+                    if (event === 'SIGNED_OUT' || !session) {
+                        redirectToAuth();
+                    }
+                });
+
+                updateUI();
+                
+            } catch (error) {
+                console.error('Init error:', error);
+                showToast('Failed to initialize. Please refresh.', 'error');
             }
+        }
 
-            // Fetch profile
-            const { data: profile } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
+        function redirectToAuth() {
+            window.location.href = 'auth.html';
+        }
 
-            userProfile = profile || { credits: 5, username: session.user.email.split('@')[0] };
-            updateUI();
+        async function fetchProfile() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+
+                if (error && error.code !== 'PGRST116') {
+                    console.error('Profile fetch error:', error);
+                }
+
+                userProfile = data || { 
+                    id: currentUser.id,
+                    credits: 5, 
+                    username: currentUser.email.split('@')[0] 
+                };
+                
+            } catch (error) {
+                console.error('Profile error:', error);
+                userProfile = { 
+                    id: currentUser.id,
+                    credits: 5, 
+                    username: currentUser.email.split('@')[0] 
+                };
+            }
         }
 
         function updateUI() {
-            // Credits
-            const credits = userProfile.credits ?? 5;
+            // Update credits display
+            const credits = userProfile?.credits ?? 5;
             document.getElementById('credits-display').textContent = credits;
 
-            // Profile
-            supabaseClient.auth.getUser().then(({ data }) => {
-                if(data.user) {
-                    document.getElementById('dropdown-email').textContent = data.user.email;
-                    document.getElementById('profile-initials').textContent = data.user.email.substring(0, 2).toUpperCase();
-                }
-            });
-
-            // Toggle Credit State
-            if (credits <= 0) {
-                document.getElementById('has-credits-ui').classList.add('hidden');
-                document.getElementById('no-credits-ui').classList.remove('hidden');
-            } else {
-                document.getElementById('has-credits-ui').classList.remove('hidden');
-                document.getElementById('no-credits-ui').classList.add('hidden');
+            // Update profile info
+            if (currentUser) {
+                document.getElementById('dropdown-email').textContent = currentUser.email;
+                document.getElementById('profile-initials').textContent = currentUser.email.substring(0, 2).toUpperCase();
             }
+
+            // Toggle credit state UI
+            const hasCredits = credits > 0;
+            document.getElementById('has-credits-ui').classList.toggle('hidden', !hasCredits);
+            document.getElementById('no-credits-ui').classList.toggle('hidden', hasCredits);
         }
 
         // ==================== PROFILE DROPDOWN ====================
         const profileBtn = document.getElementById('profile-btn');
         const profileDropdown = document.getElementById('profile-dropdown');
 
-        profileBtn.addEventListener('click', () => {
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             profileDropdown.classList.toggle('active');
         });
 
@@ -354,140 +469,225 @@
         });
 
         document.getElementById('sign-out-btn').addEventListener('click', async () => {
-            await supabaseClient.auth.signOut();
-            window.location.href = 'auth.html';
+            try {
+                await supabaseClient.auth.signOut();
+                redirectToAuth();
+            } catch (error) {
+                console.error('Sign out error:', error);
+                redirectToAuth();
+            }
         });
 
         // ==================== EDGE FUNCTION CALL ====================
-        async function callRewriteEdgeFunction(message, intent, context) {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) throw new Error('No active session');
-
-            const response = await fetch(`${SUPABASE_URL}/functions/v1/rewrite`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`
-                },
-                body: JSON.stringify({
-                    message,
-                    intent,
-                    context: context || undefined
-                })
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Edge function error (${response.status}): ${errorText}`);
+        async function callRewriteFunction(message, intent, context) {
+            // Build the payload
+            const payload = {
+                message: message.trim(),
+                intent: intent,
+            };
+            
+            // Only include context if provided
+            if (context && context.trim()) {
+                payload.context = context.trim();
             }
 
-            return await response.json();
+            console.log('Calling edge function with payload:', payload);
+
+            // Use Supabase client's built-in invoke method
+            const { data, error } = await supabaseClient.functions.invoke('rewrite', {
+                body: payload
+            });
+
+            if (error) {
+                console.error('Edge function error:', error);
+                
+                // Handle specific error types
+                if (error.message?.includes('Unauthorized') || error.message?.includes('401')) {
+                    throw new Error('Your session has expired. Please sign in again.');
+                }
+                
+                if (error.message?.includes('Insufficient credits')) {
+                    throw new Error('You have run out of credits. Please upgrade to continue.');
+                }
+                
+                throw new Error(error.message || 'Failed to rewrite message. Please try again.');
+            }
+
+            if (!data) {
+                throw new Error('No response received from the server.');
+            }
+
+            console.log('Edge function response:', data);
+            
+            return data;
         }
 
         // ==================== REWRITE LOGIC ====================
         document.getElementById('rewrite-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const btn = document.getElementById('rewrite-btn');
-            const inputText = document.getElementById('message-input').value;
-            const intent = document.getElementById('intent-select').value;
-            const context = document.getElementById('context-input').value;
+            if (isLoading) return;
             
-            if (!inputText.trim()) return;
+            const messageInput = document.getElementById('message-input');
+            const intentSelect = document.getElementById('intent-select');
+            const contextInput = document.getElementById('context-input');
+            
+            const message = messageInput.value.trim();
+            const intent = intentSelect.value;
+            const context = contextInput.value.trim();
+            
+            if (!message) {
+                showToast('Please enter a message to rewrite.', 'error');
+                messageInput.focus();
+                return;
+            }
 
-            // Loading State
-            btn.disabled = true;
-            btn.innerHTML = '<svg class="animate-spin h-5 w-5 text-bg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+            // Check credits
+            if ((userProfile?.credits ?? 0) <= 0) {
+                showToast('You have no credits remaining. Please upgrade.', 'error');
+                return;
+            }
+
+            setLoading(true);
 
             try {
-                // Get current user
-                const { data: { user } } = await supabaseClient.auth.getUser();
-                if (!user) throw new Error('Not authenticated');
-
-                // Call the actual edge function
-                const result = await callRewriteEdgeFunction(inputText, intent, context);
+                // Call edge function using the SDK method
+                const result = await callRewriteFunction(message, intent, context);
                 
-                // Expected result shape: { rewritten, explanation, score, beforeScore }
-                // If your edge function returns different keys, adjust here
-                const { rewritten, explanation, score, beforeScore } = result;
+                // Validate response structure
+                if (!result.rewritten) {
+                    throw new Error('Invalid response from server. Missing rewritten message.');
+                }
 
-                // Deduct Credit (only after successful generation)
-                userProfile.credits = Math.max(0, userProfile.credits - 1);
-                
+                // Deduct credit locally
+                userProfile.credits = Math.max(0, (userProfile.credits ?? 1) - 1);
+
                 // Update credits in database
-                await supabaseClient
+                const { error: updateError } = await supabaseClient
                     .from('profiles')
                     .update({ credits: userProfile.credits })
-                    .eq('id', user.id);
+                    .eq('id', currentUser.id);
 
-                // Save rewrite to database
+                if (updateError) {
+                    console.error('Failed to update credits:', updateError);
+                }
+
+                // Save rewrite to history
                 const { error: insertError } = await supabaseClient
                     .from('rewrites')
                     .insert({
-                        user_id: user.id,
-                        original_message: inputText,
+                        user_id: currentUser.id,
+                        original_message: message,
                         intent: intent,
                         context: context || null,
-                        rewritten_message: rewritten,
-                        explanation: explanation,
-                        confidence_score: score,
-                        before_score: beforeScore,
+                        rewritten_message: result.rewritten,
+                        explanation: result.explanation || null,
+                        confidence_score: result.score || null,
+                        before_score: result.beforeScore || null,
                         credits_used: 1,
-                        result_data: result  // store full result JSON
+                        result_data: result
                     });
 
                 if (insertError) {
-                    console.error('Failed to save rewrite:', insertError);
-                    // Still show the result, but maybe show a warning
+                    console.error('Failed to save rewrite history:', insertError);
+                    // Don't throw - this is not critical for the user
                 }
 
-                // Display Result
-                displayResult({ rewritten, explanation, score, beforeScore });
+                // Display the result
+                displayResult({
+                    rewritten: result.rewritten,
+                    explanation: result.explanation || 'This rewrite improves your message tone and effectiveness.',
+                    score: result.score || 75,
+                    beforeScore: result.beforeScore || 40
+                });
+
+                showToast('Message rewritten successfully!', 'success');
                 
             } catch (error) {
                 console.error('Rewrite error:', error);
-                alert('Something went wrong. Please try again.');
+                showToast(error.message || 'An error occurred. Please try again.', 'error');
             } finally {
-                // Reset Button
-                btn.disabled = false;
-                btn.innerHTML = '<span>Rewrite Message</span><span class="bg-bg/20 text-xs px-2 py-0.5 rounded-full font-bold">1 Credit</span>';
+                setLoading(false);
                 updateUI();
             }
         });
 
         function displayResult(data) {
-            document.getElementById('result-card').classList.remove('hidden');
+            const resultCard = document.getElementById('result-card');
+            
+            // Update content
             document.getElementById('result-text').textContent = data.rewritten;
             document.getElementById('explanation-text').textContent = data.explanation;
-            
-            // Animate Score
-            const scoreVal = document.getElementById('score-value');
-            const scoreBar = document.getElementById('score-bar');
-            
-            scoreVal.textContent = data.score;
-            scoreBar.style.width = data.score + '%';
-
-            // Transformation
+            document.getElementById('score-value').textContent = data.score + '%';
             document.getElementById('before-score').textContent = data.beforeScore;
             document.getElementById('after-score').textContent = data.score;
+            
+            // Reset and animate score bar
+            const scoreBar = document.getElementById('score-bar');
+            scoreBar.style.width = '0%';
+            
+            // Show card
+            resultCard.classList.remove('hidden');
+            
+            // Trigger animation after a brief delay
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    scoreBar.style.width = data.score + '%';
+                });
+            });
 
             // Scroll to result
-            document.getElementById('result-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(() => {
+                resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
         }
 
         // ==================== COPY FUNCTION ====================
-        document.getElementById('copy-btn').addEventListener('click', () => {
+        document.getElementById('copy-btn').addEventListener('click', async () => {
             const text = document.getElementById('result-text').textContent;
-            navigator.clipboard.writeText(text).then(() => {
+            
+            try {
+                await navigator.clipboard.writeText(text);
+                
                 const btn = document.getElementById('copy-btn');
                 const originalHTML = btn.innerHTML;
-                btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied';
-                setTimeout(() => btn.innerHTML = originalHTML, 2000);
-            });
+                btn.innerHTML = `
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Copied
+                `;
+                
+                showToast('Copied to clipboard!', 'success');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Copy failed:', error);
+                showToast('Failed to copy. Please select and copy manually.', 'error');
+            }
         });
 
-        // Initialize
-        initPage();
+        // ==================== KEYBOARD SHORTCUTS ====================
+        document.addEventListener('keydown', (e) => {
+            // Cmd/Ctrl + Enter to submit
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                const form = document.getElementById('rewrite-form');
+                if (form) {
+                    form.dispatchEvent(new Event('submit'));
+                }
+            }
+            
+            // Escape to close dropdown
+            if (e.key === 'Escape') {
+                profileDropdown.classList.remove('active');
+            }
+        });
+
+        // ==================== INITIALIZE ====================
+        document.addEventListener('DOMContentLoaded', initPage);
     </script>
 </body>
 </html>
