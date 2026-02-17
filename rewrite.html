@@ -315,379 +315,212 @@
         const SUPABASE_URL = 'https://rwcwuugxlfjqxnkwdavt.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3Y3d1dWd4bGZqcXhua3dkYXZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2ODMzMzMsImV4cCI6MjA4NjI1OTMzM30.ZscCHxYa2LWw60yB2XKhbo9b8Qs3iZKeJZYhIzPUifw';
 
-        // ==================== SUPABASE CLIENT ====================
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-            auth: {
-                autoRefreshToken: true,
-                persistSession: true,
-                detectSessionInUrl: true
-            }
-        });
+   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+    }
+});
 
-        // ==================== STATE ====================
-        let currentUser = null;
-        let userProfile = null;
-        let isLoading = false;
+/* ==================== STATE ==================== */
+let currentUser = null;
+let userProfile = null;
+let isLoading = false;
 
-        // ==================== UTILITIES ====================
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            
-            const bgColor = type === 'error' ? 'bg-danger/90' : 
-                           type === 'success' ? 'bg-success/90' : 'bg-card';
-            const borderColor = type === 'error' ? 'border-danger' : 
-                               type === 'success' ? 'border-success' : 'border-border';
-            
-            toast.className = `toast ${bgColor} border ${borderColor} px-4 py-3 rounded-xl text-sm text-white shadow-lg max-w-sm`;
-            toast.textContent = message;
-            
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-        }
+/* ==================== INIT ==================== */
+document.addEventListener('DOMContentLoaded', initPage);
 
-        function setLoading(loading) {
-            isLoading = loading;
-            const btn = document.getElementById('rewrite-btn');
-            btn.disabled = loading;
-            
-            if (loading) {
-                btn.innerHTML = `
-                    <svg class="animate-spin h-5 w-5 text-bg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>Rewriting...</span>
-                `;
-            } else {
-                btn.innerHTML = `
-                    <span>Rewrite Message</span>
-                    <span class="bg-bg/20 text-xs px-2 py-0.5 rounded-full font-bold">1 Credit</span>
-                `;
-            }
-        }
+async function initPage() {
+    const { data: { session }, error } = await supabaseClient.auth.getSession();
 
-        // ==================== AUTH & INIT ====================
-        async function initPage() {
-            try {
-                // Check for existing session
-                const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-                
-                if (sessionError) {
-                    console.error('Session error:', sessionError);
-                    redirectToAuth();
-                    return;
-                }
-                
-                if (!session) {
-                    redirectToAuth();
-                    return;
-                }
+    if (error || !session) {
+        window.location.href = 'auth.html';
+        return;
+    }
 
-                currentUser = session.user;
-                
-                // Fetch profile
-                await fetchProfile();
-                
-                // Setup auth state listener
-                supabaseClient.auth.onAuthStateChange((event, session) => {
-                    if (event === 'SIGNED_OUT' || !session) {
-                        redirectToAuth();
-                    }
-                });
+    currentUser = session.user;
+    console.log("Logged in user:", currentUser);
 
-                updateUI();
-                
-            } catch (error) {
-                console.error('Init error:', error);
-                showToast('Failed to initialize. Please refresh.', 'error');
-            }
-        }
+    await fetchProfile();
+    updateUI();
 
-        function redirectToAuth() {
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_OUT' || !session) {
             window.location.href = 'auth.html';
         }
+    });
+}
 
-        async function fetchProfile() {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', currentUser.id)
-                    .single();
+/* ==================== PROFILE ==================== */
+async function fetchProfile() {
+    const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
 
-                if (error && error.code !== 'PGRST116') {
-                    console.error('Profile fetch error:', error);
-                }
+    if (error) {
+        console.warn('Profile fetch error:', error);
+    }
 
-                userProfile = data || { 
-                    id: currentUser.id,
-                    credits: 5, 
-                    username: currentUser.email.split('@')[0] 
-                };
-                
-            } catch (error) {
-                console.error('Profile error:', error);
-                userProfile = { 
-                    id: currentUser.id,
-                    credits: 5, 
-                    username: currentUser.email.split('@')[0] 
-                };
-            }
+    userProfile = data || {
+        id: currentUser.id,
+        credits: 5,
+        username: currentUser.email.split('@')[0]
+    };
+}
+
+/* ==================== UI ==================== */
+function updateUI() {
+    const credits = userProfile?.credits ?? 0;
+    document.getElementById('credits-display').textContent = credits;
+
+    if (currentUser) {
+        document.getElementById('dropdown-email').textContent = currentUser.email;
+        document.getElementById('profile-initials').textContent =
+            currentUser.email.substring(0, 2).toUpperCase();
+    }
+
+    document.getElementById('has-credits-ui')
+        .classList.toggle('hidden', credits <= 0);
+    document.getElementById('no-credits-ui')
+        .classList.toggle('hidden', credits > 0);
+}
+
+function setLoading(state) {
+    isLoading = state;
+    const btn = document.getElementById('rewrite-btn');
+    btn.disabled = state;
+
+    btn.innerHTML = state
+        ? 'Rewriting...'
+        : '<span>Rewrite Message</span><span class="bg-bg/20 text-xs px-2 py-0.5 rounded-full font-bold">1 Credit</span>';
+}
+
+/* ==================== EDGE CALL ==================== */
+async function callRewriteFunction(message, intent, context) {
+    const { data: { session }, error } = await supabaseClient.auth.getSession();
+
+    if (error || !session) {
+        throw new Error("Session expired. Please sign in again.");
+    }
+
+    const payload = {
+        message: message.trim(),
+        intent
+    };
+
+    if (context?.trim()) {
+        payload.context = context.trim();
+    }
+
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/rewrite`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Edge error:", errorText);
+
+        if (response.status === 401) {
+            throw new Error("Invalid session. Please sign in again.");
         }
 
-        function updateUI() {
-            // Update credits display
-            const credits = userProfile?.credits ?? 5;
-            document.getElementById('credits-display').textContent = credits;
-
-            // Update profile info
-            if (currentUser) {
-                document.getElementById('dropdown-email').textContent = currentUser.email;
-                document.getElementById('profile-initials').textContent = currentUser.email.substring(0, 2).toUpperCase();
-            }
-
-            // Toggle credit state UI
-            const hasCredits = credits > 0;
-            document.getElementById('has-credits-ui').classList.toggle('hidden', !hasCredits);
-            document.getElementById('no-credits-ui').classList.toggle('hidden', hasCredits);
+        if (response.status === 403) {
+            throw new Error("Permission denied.");
         }
 
-        // ==================== PROFILE DROPDOWN ====================
-        const profileBtn = document.getElementById('profile-btn');
-        const profileDropdown = document.getElementById('profile-dropdown');
+        throw new Error("Server error. Try again.");
+    }
 
-        profileBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            profileDropdown.classList.toggle('active');
-        });
+    return await response.json();
+}
 
-        document.addEventListener('click', (e) => {
-            if (!profileDropdown.contains(e.target) && !profileBtn.contains(e.target)) {
-                profileDropdown.classList.remove('active');
-            }
-        });
+/* ==================== FORM SUBMIT ==================== */
+document.getElementById('rewrite-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (isLoading) return;
 
-        document.getElementById('sign-out-btn').addEventListener('click', async () => {
-            try {
-                await supabaseClient.auth.signOut();
-                redirectToAuth();
-            } catch (error) {
-                console.error('Sign out error:', error);
-                redirectToAuth();
-            }
-        });
+    const message = document.getElementById('message-input').value.trim();
+    const intent = document.getElementById('intent-select').value;
+    const context = document.getElementById('context-input').value;
 
-        // ==================== EDGE FUNCTION CALL ====================
-        async function callRewriteFunction(message, intent, context) {
-            // Build the payload
-            const payload = {
-                message: message.trim(),
-                intent: intent,
-            };
-            
-            // Only include context if provided
-            if (context && context.trim()) {
-                payload.context = context.trim();
-            }
+    if (!message) return alert("Enter a message first.");
 
-            console.log('Calling edge function with payload:', payload);
+    if ((userProfile?.credits ?? 0) <= 0) {
+        return alert("No credits remaining.");
+    }
 
-            // Use Supabase client's built-in invoke method
-            const { data, error } = await supabaseClient.functions.invoke('rewrite', {
-                body: payload
+    setLoading(true);
+
+    try {
+        const result = await callRewriteFunction(message, intent, context);
+
+        if (!result.rewritten) {
+            throw new Error("Invalid response.");
+        }
+
+        // Deduct credit
+        userProfile.credits = Math.max(0, userProfile.credits - 1);
+
+        await supabaseClient
+            .from('profiles')
+            .update({ credits: userProfile.credits })
+            .eq('id', currentUser.id);
+
+        await supabaseClient
+            .from('rewrites')
+            .insert({
+                user_id: currentUser.id,
+                original_message: message,
+                intent,
+                context: context || null,
+                rewritten_message: result.rewritten,
+                explanation: result.explanation,
+                confidence_score: result.score,
+                before_score: result.beforeScore,
+                credits_used: 1,
+                result_data: result
             });
 
-            if (error) {
-                console.error('Edge function error:', error);
-                
-                // Handle specific error types
-                if (error.message?.includes('Unauthorized') || error.message?.includes('401')) {
-                    throw new Error('Your session has expired. Please sign in again.');
-                }
-                
-                if (error.message?.includes('Insufficient credits')) {
-                    throw new Error('You have run out of credits. Please upgrade to continue.');
-                }
-                
-                throw new Error(error.message || 'Failed to rewrite message. Please try again.');
-            }
+        displayResult(result);
+        updateUI();
 
-            if (!data) {
-                throw new Error('No response received from the server.');
-            }
+    } catch (err) {
+        console.error(err);
+        alert(err.message);
+    } finally {
+        setLoading(false);
+    }
+});
 
-            console.log('Edge function response:', data);
-            
-            return data;
-        }
+/* ==================== DISPLAY RESULT ==================== */
+function displayResult(data) {
+    document.getElementById('result-card').classList.remove('hidden');
+    document.getElementById('result-text').textContent = data.rewritten;
+    document.getElementById('explanation-text').textContent = data.explanation || '';
+    document.getElementById('score-value').textContent = data.score + '%';
+    document.getElementById('before-score').textContent = data.beforeScore;
+    document.getElementById('after-score').textContent = data.score;
 
-        // ==================== REWRITE LOGIC ====================
-        document.getElementById('rewrite-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            if (isLoading) return;
-            
-            const messageInput = document.getElementById('message-input');
-            const intentSelect = document.getElementById('intent-select');
-            const contextInput = document.getElementById('context-input');
-            
-            const message = messageInput.value.trim();
-            const intent = intentSelect.value;
-            const context = contextInput.value.trim();
-            
-            if (!message) {
-                showToast('Please enter a message to rewrite.', 'error');
-                messageInput.focus();
-                return;
-            }
+    const scoreBar = document.getElementById('score-bar');
+    scoreBar.style.width = '0%';
+    setTimeout(() => {
+        scoreBar.style.width = data.score + '%';
+    }, 100);
+}
 
-            // Check credits
-            if ((userProfile?.credits ?? 0) <= 0) {
-                showToast('You have no credits remaining. Please upgrade.', 'error');
-                return;
-            }
-
-            setLoading(true);
-
-            try {
-                // Call edge function using the SDK method
-                const result = await callRewriteFunction(message, intent, context);
-                
-                // Validate response structure
-                if (!result.rewritten) {
-                    throw new Error('Invalid response from server. Missing rewritten message.');
-                }
-
-                // Deduct credit locally
-                userProfile.credits = Math.max(0, (userProfile.credits ?? 1) - 1);
-
-                // Update credits in database
-                const { error: updateError } = await supabaseClient
-                    .from('profiles')
-                    .update({ credits: userProfile.credits })
-                    .eq('id', currentUser.id);
-
-                if (updateError) {
-                    console.error('Failed to update credits:', updateError);
-                }
-
-                // Save rewrite to history
-                const { error: insertError } = await supabaseClient
-                    .from('rewrites')
-                    .insert({
-                        user_id: currentUser.id,
-                        original_message: message,
-                        intent: intent,
-                        context: context || null,
-                        rewritten_message: result.rewritten,
-                        explanation: result.explanation || null,
-                        confidence_score: result.score || null,
-                        before_score: result.beforeScore || null,
-                        credits_used: 1,
-                        result_data: result
-                    });
-
-                if (insertError) {
-                    console.error('Failed to save rewrite history:', insertError);
-                    // Don't throw - this is not critical for the user
-                }
-
-                // Display the result
-                displayResult({
-                    rewritten: result.rewritten,
-                    explanation: result.explanation || 'This rewrite improves your message tone and effectiveness.',
-                    score: result.score || 75,
-                    beforeScore: result.beforeScore || 40
-                });
-
-                showToast('Message rewritten successfully!', 'success');
-                
-            } catch (error) {
-                console.error('Rewrite error:', error);
-                showToast(error.message || 'An error occurred. Please try again.', 'error');
-            } finally {
-                setLoading(false);
-                updateUI();
-            }
-        });
-
-        function displayResult(data) {
-            const resultCard = document.getElementById('result-card');
-            
-            // Update content
-            document.getElementById('result-text').textContent = data.rewritten;
-            document.getElementById('explanation-text').textContent = data.explanation;
-            document.getElementById('score-value').textContent = data.score + '%';
-            document.getElementById('before-score').textContent = data.beforeScore;
-            document.getElementById('after-score').textContent = data.score;
-            
-            // Reset and animate score bar
-            const scoreBar = document.getElementById('score-bar');
-            scoreBar.style.width = '0%';
-            
-            // Show card
-            resultCard.classList.remove('hidden');
-            
-            // Trigger animation after a brief delay
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    scoreBar.style.width = data.score + '%';
-                });
-            });
-
-            // Scroll to result
-            setTimeout(() => {
-                resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
-        }
-
-        // ==================== COPY FUNCTION ====================
-        document.getElementById('copy-btn').addEventListener('click', async () => {
-            const text = document.getElementById('result-text').textContent;
-            
-            try {
-                await navigator.clipboard.writeText(text);
-                
-                const btn = document.getElementById('copy-btn');
-                const originalHTML = btn.innerHTML;
-                btn.innerHTML = `
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                    Copied
-                `;
-                
-                showToast('Copied to clipboard!', 'success');
-                
-                setTimeout(() => {
-                    btn.innerHTML = originalHTML;
-                }, 2000);
-                
-            } catch (error) {
-                console.error('Copy failed:', error);
-                showToast('Failed to copy. Please select and copy manually.', 'error');
-            }
-        });
-
-        // ==================== KEYBOARD SHORTCUTS ====================
-        document.addEventListener('keydown', (e) => {
-            // Cmd/Ctrl + Enter to submit
-            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-                const form = document.getElementById('rewrite-form');
-                if (form) {
-                    form.dispatchEvent(new Event('submit'));
-                }
-            }
-            
-            // Escape to close dropdown
-            if (e.key === 'Escape') {
-                profileDropdown.classList.remove('active');
-            }
-        });
-
-        // ==================== INITIALIZE ====================
-        document.addEventListener('DOMContentLoaded', initPage);
-    </script>
+/* ==================== SIGN OUT ==================== */
+document.getElementById('sign-out-btn').addEventListener('click', async () => {
+    await supabaseClient.auth.signOut();
+    window.location.href = 'auth.html';
+});
+</script>
 </body>
 </html>
