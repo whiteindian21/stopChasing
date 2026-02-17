@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stop Chasing — Sign In</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+
+   
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bg: '#08080c',
+                        card: '#0f0f14',
+                        cardHover: '#14141c',
+                        border: '#1e1e2a',
+                        borderFocus: '#2a2a3a',
+                        muted: '#6b6b7a',
+                        accent: '#d4a574',
+                        accentHover: '#e0b285',
+                        accentDark: '#c49565',
+                        inputBg: '#0a0a10',
+                    },
+                    fontFamily: {
+                        display: ['Syne', 'sans-serif'],
+                        body: ['DM Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #08080c;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .auth-gradient {
+            background: 
+                radial-gradient(ellipse 80% 60% at 0% 50%, rgba(212, 165, 116, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 100% 0%, rgba(139, 92, 246, 0.04) 0%, transparent 40%),
+                #08080c;
+        }
+        
+        .card-gradient {
+            background: linear-gradient(145deg, #111118 0%, #0c0c12 100%);
+        }
+        
+        .card-glow {
+            box-shadow: 
+                0 0 0 1px rgba(212, 165, 116, 0.05),
+                0 20px 50px -20px rgba(0, 0, 0, 0.5),
+                0 0 100px -50px rgba(212, 165, 116, 0.1);
+        }
+        
+        .input-field {
+            background: #0a0a10;
+            border: 1px solid #1e1e2a;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .input-field:focus {
+            border-color: #d4a574;
+            box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.1);
+            outline: none;
+        }
+        
+        .input-field::placeholder {
+            color: #4a4a5a;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #d4a574 0%, #c49565 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 30px -10px rgba(212, 165, 116, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid #2a2a3a;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            border-color: #3a3a4a;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .tab-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .tab-btn.active {
+            color: #d4a574;
+        }
+        
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #d4a574;
+            border-radius: 1px;
+        }
+        
+        .feature-check {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(212, 165, 116, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        /* Custom Checkbox Styles */
+        .custom-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 1px solid #2a2a3a;
+            border-radius: 4px;
+            background: #0a0a10;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        
+        .custom-checkbox:checked {
+            background: #d4a574;
+            border-color: #d4a574;
+        }
+        
+        .custom-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 5px;
+            height: 9px;
+            border: solid #08080c;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        
+        .custom-checkbox:focus-visible {
+            outline: 2px solid #d4a574;
+            outline-offset: 2px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .animate-fade {
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        .animate-slide {
+            animation: slideIn 0.4s ease forwards;
+        }
+        
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        .focus-ring:focus-visible {
+            outline: 2px solid #d4a574;
+            outline-offset: 2px;
+        }
+        
+        .password-toggle {
+            transition: all 0.2s ease;
+        }
+        
+        .password-toggle:hover {
+            color: #d4a574;
+        }
+        
+        .divider-line {
+            background: linear-gradient(90deg, transparent, #2a2a3a, transparent);
+        }
+        
+        .left-content {
+            animation: slideIn 0.6s ease forwards;
+        }
+        
+        .right-content {
+            animation: fadeIn 0.7s ease forwards;
+            animation-delay: 0.2s;
+            opacity: 0;
+        }
+        
+        .form-panel {
+            display: none;
+        }
+        
+        .form-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        /* Error message styling */
+        .auth-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            color: #f87171;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .auth-error.show {
+            display: block;
+        }
+    </style>
+</head>
+<body class="auth-gradient">
+    <div class="min-h-screen flex items-center justify-center px-4 py-12 sm:py-16">
+        <div class="w-full max-w-5xl grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+            
+            <!-- Left Side - Marketing -->
+            <div class="left-content hidden lg:block">
+                <div class="max-w-md">
+                    <h1 class="font-display font-bold text-4xl xl:text-5xl leading-tight mb-6 text-white">
+                        Text with confidence. <br>
+                        <span class="text-accent">Not anxiety.</span>
+                    </h1>
+                    <p class="text-muted text-lg leading-relaxed mb-10">
+                        Stop overthinking every message. Know where you stand and reply without chasing.
+                    </p>
+                    <ul class="space-y-4">
+                        <li class="flex items-center gap-3">
+                            <div class="feature-check">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d4a574" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                            </div>
+                            <span class="text-white/80 text-base">Rewrite replies instantly</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <div class="feature-check">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d4a574" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                            </div>
+                            <span class="text-white/80 text-base">See attraction signals</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <div class="feature-check">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d4a574" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                            </div>
+                            <span class="text-white/80 text-base">Spot red flags early</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Right Side - Auth Card -->
+            <div class="right-content w-full max-w-md mx-auto lg:mx-0 lg:ml-auto">
+                <div class="card-gradient card-glow rounded-2xl p-8 sm:p-10">
+                    
+                    <!-- Header -->
+                    <div class="text-center mb-8">
+                        <a href="landing.html" class="font-display font-bold text-2xl text-white inline-block mb-2">
+                            Stop Chasing
+                        </a>
+                        <p class="text-muted text-sm">
+                            Clarity before you double text.
+                        </p>
+                    </div>
+                    
+                    <!-- Tabs -->
+                    <div class="flex items-center justify-center gap-8 mb-8 border-b border-border pb-4">
+                        <button 
+                            type="button"
+                            class="tab-btn active relative text-base font-medium focus-ring rounded px-2 py-1"
+                            data-tab="signin"
+                            aria-selected="true"
+                            role="tab"
+                        >
+                            Sign In
+                        </button>
+                        <button 
+                            type="button"
+                            class="tab-btn relative text-base font-medium text-muted hover:text-white focus-ring rounded px-2 py-1"
+                            data-tab="signup"
+                            aria-selected="false"
+                            role="tab"
+                        >
+                            Create Account
+                        </button>
+                    </div>
+
+                    <!-- Error Message Container -->
+                    <div id="auth-error" class="auth-error"></div>
+                    
+                    <!-- Sign In Form -->
+                    <div class="form-panel active" id="signin-panel" role="tabpanel">
+                        <form id="signin-form" class="space-y-5">
+                            <div>
+                                <label for="signin-email" class="block text-sm font-medium text-white/70 mb-2">
+                                    Email
+                                </label>
+                                <input 
+                                    type="email" 
+                                    id="signin-email" 
+                                    name="email"
+                                    class="input-field w-full px-4 py-3.5 rounded-xl text-white placeholder:text-muted/50 focus-ring"
+                                    placeholder="you@example.com"
+                                    required
+                                    autocomplete="email"
+                                >
+                            </div>
+                            
+                            <div>
+                                <label for="signin-password" class="block text-sm font-medium text-white/70 mb-2">
+                                    Password
+                                </label>
+                                <div class="relative">
+                                    <input 
+                                        type="password" 
+                                        id="signin-password" 
+                                        name="password"
+                                        class="input-field w-full px-4 py-3.5 rounded-xl text-white placeholder:text-muted/50 focus-ring pr-12"
+                                        placeholder="Enter your password"
+                                        required
+                                        autocomplete="current-password"
+                                    >
+                                    <button 
+                                        type="button" 
+                                        class="password-toggle absolute right-4 top-1/2 -translate-y-1/2 text-muted focus-ring rounded"
+                                        onclick="togglePassword('signin-password', this)"
+                                        aria-label="Toggle password visibility"
+                                    >
+                                        <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                        <svg class="eye-closed hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                            <line x1="1" y1="1" x2="23" y2="23"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Remember Me & Forgot Password -->
+                            <div class="flex items-center justify-between">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="remember-me" class="custom-checkbox">
+                                    <span class="text-sm text-muted select-none">Remember me for 30 days</span>
+                                </label>
+                                <a href="#" class="text-sm text-accent hover:text-accentHover transition-colors focus-ring rounded">
+                                    Forgot password?
+                                </a>
+                            </div>
+                            
+                            <button 
+                                type="submit" 
+                                id="signin-btn"
+                                class="btn-primary w-full py-4 rounded-xl font-semibold text-bg text-base focus-ring relative"
+                            >
+                                Sign In
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Sign Up Form -->
+                    <div class="form-panel" id="signup-panel" role="tabpanel">
+                        <form id="signup-form" class="space-y-5">
+                            <div>
+                                <label for="signup-email" class="block text-sm font-medium text-white/70 mb-2">
+                                    Email
+                                </label>
+                                <input 
+                                    type="email" 
+                                    id="signup-email" 
+                                    name="email"
+                                    class="input-field w-full px-4 py-3.5 rounded-xl text-white placeholder:text-muted/50 focus-ring"
+                                    placeholder="you@example.com"
+                                    required
+                                    autocomplete="email"
+                                >
+                            </div>
+                            
+                            <div>
+                                <label for="signup-password" class="block text-sm font-medium text-white/70 mb-2">
+                                    Password
+                                </label>
+                                <div class="relative">
+                                    <input 
+                                        type="password" 
+                                        id="signup-password" 
+                                        name="password"
+                                        class="input-field w-full px-4 py-3.5 rounded-xl text-white placeholder:text-muted/50 focus-ring pr-12"
+                                        placeholder="Create a password"
+                                        required
+                                        autocomplete="new-password"
+                                        minlength="6"
+                                    >
+                                    <button 
+                                        type="button" 
+                                        class="password-toggle absolute right-4 top-1/2 -translate-y-1/2 text-muted focus-ring rounded"
+                                        onclick="togglePassword('signup-password', this)"
+                                        aria-label="Toggle password visibility"
+                                    >
+                                        <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                        <svg class="eye-closed hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                            <line x1="1" y1="1" x2="23" y2="23"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="signup-confirm" class="block text-sm font-medium text-white/70 mb-2">
+                                    Confirm password
+                                </label>
+                                <div class="relative">
+                                    <input 
+                                        type="password" 
+                                        id="signup-confirm" 
+                                        name="confirm-password"
+                                        class="input-field w-full px-4 py-3.5 rounded-xl text-white placeholder:text-muted/50 focus-ring pr-12"
+                                        placeholder="Confirm your password"
+                                        required
+                                        autocomplete="new-password"
+                                    >
+                                    <button 
+                                        type="button" 
+                                        class="password-toggle absolute right-4 top-1/2 -translate-y-1/2 text-muted focus-ring rounded"
+                                        onclick="togglePassword('signup-confirm', this)"
+                                        aria-label="Toggle password visibility"
+                                    >
+                                        <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                        <svg class="eye-closed hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                            <line x1="1" y1="1" x2="23" y2="23"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Terms Acceptance -->
+                            <div class="pt-1">
+                                <label class="flex items-start gap-2.5 cursor-pointer">
+                                    <input type="checkbox" id="accept-terms" class="custom-checkbox mt-0.5" required>
+                                    <span class="text-sm text-muted select-none leading-snug">
+                                        I accept the <a href="terms.html" class="text-accent hover:text-accentHover transition-colors">Terms of Service</a> and <a href="privacy.html" class="text-accent hover:text-accentHover transition-colors">Privacy Policy</a>.
+                                    </span>
+                                </label>
+                            </div>
+                            
+                            <button 
+                                type="submit" 
+                                id="signup-btn"
+                                class="btn-primary w-full py-4 rounded-xl font-semibold text-bg text-base focus-ring relative"
+                            >
+                                Create My Account
+                            </button>
+                            
+                            <p class="text-center text-muted text-sm">
+                                5 free credits every month. No credit card required.
+                            </p>
+                        </form>
+                    </div>
+                    
+                    <!-- Privacy Note -->
+                    <p class="text-center text-muted/60 text-xs mt-8">
+                        Your conversations are private and never shared.
+                    </p>
+                </div>
+                
+                <!-- Back to landing -->
+                <div class="text-center mt-6">
+                    <a href="landing.html" class="text-muted text-sm hover:text-white transition-colors focus-ring rounded inline-flex items-center gap-2">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                        Back to home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      
+        // ==================== SUPABASE INIT ====================
+        const SUPABASE_URL = 'https://rwcwuugxlfjqxnkwdavt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3Y3d1dWd4bGZqcXhua3dkYXZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2ODMzMzMsImV4cCI6MjA4NjI1OTMzM30.ZscCHxYa2LWw60yB2XKhbo9b8Qs3iZKeJZYhIzPUifw';
+        
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ==================== REDIRECT IF LOGGED IN ====================
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                window.location.href = 'dashboard.html';
+            }
+        })();
+
+        // ==================== UI HELPERS ====================
+        const errorDiv = document.getElementById('auth-error');
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+        }
+        function clearError() {
+            errorDiv.textContent = '';
+            errorDiv.classList.remove('show');
+        }
+        function setLoading(button, isLoading) {
+            if (isLoading) {
+                button.disabled = true;
+                button.innerHTML = '<span class="opacity-0">Loading...</span><div class="absolute inset-0 flex items-center justify-center"><svg class="animate-spin h-5 w-5 text-bg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>';
+            } else {
+                button.disabled = false;
+                button.innerHTML = button.id === 'signin-btn' ? 'Sign In' : 'Create My Account';
+            }
+        }
+
+        // ==================== TAB SWITCHING ====================
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const formPanels = document.querySelectorAll('.form-panel');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetTab = btn.dataset.tab;
+                tabBtns.forEach(b => {
+                    b.classList.remove('active', 'text-accent');
+                    b.classList.add('text-muted');
+                    b.setAttribute('aria-selected', 'false');
+                });
+                btn.classList.add('active');
+                btn.classList.remove('text-muted');
+                btn.setAttribute('aria-selected', 'true');
+                formPanels.forEach(panel => panel.classList.remove('active'));
+                document.getElementById(`${targetTab}-panel`).classList.add('active');
+                clearError();
+            });
+        });
+
+        // ==================== PASSWORD TOGGLE ====================
+        window.togglePassword = function(inputId, button) {
+            const input = document.getElementById(inputId);
+            const eyeOpen = button.querySelector('.eye-open');
+            const eyeClosed = button.querySelector('.eye-closed');
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeOpen.classList.add('hidden');
+                eyeClosed.classList.remove('hidden');
+            } else {
+                input.type = 'password';
+                eyeOpen.classList.remove('hidden');
+                eyeClosed.classList.add('hidden');
+            }
+        };
+
+        // ==================== SIGN IN ====================
+        document.getElementById('signin-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearError();
+
+            const email = document.getElementById('signin-email').value;
+            const password = document.getElementById('signin-password').value;
+            const btn = document.getElementById('signin-btn');
+
+            setLoading(btn, true);
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            setLoading(btn, false);
+
+            if (error) {
+                showError(error.message);
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        });
+
+        // ==================== SIGN UP ====================
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearError();
+
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const confirm = document.getElementById('signup-confirm').value;
+            const acceptTerms = document.getElementById('accept-terms').checked;
+            const btn = document.getElementById('signup-btn');
+
+            if (!acceptTerms) {
+                showError('You must accept the Terms of Service and Privacy Policy.');
+                return;
+            }
+
+            if (password !== confirm) {
+                showError('Passwords do not match');
+                return;
+            }
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters');
+                return;
+            }
+
+            setLoading(btn, true);
+
+            const { data, error } = await supabaseClient.auth.signUp({
+                email,
+                password
+            });
+
+            setLoading(btn, false);
+
+            if (error) {
+                showError(error.message);
+            } else {
+                if (data.user && data.user.identities && data.user.identities.length === 0) {
+                    showError('This email is already registered. Please sign in instead.');
+                } else {
+                    if (data.session) {
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        alert('Check your email for a confirmation link!');
+                        document.querySelector('[data-tab="signin"]').click();
+                    }
+                }
+            }
+        });
+
+        // ==================== PASSWORD MATCH LIVE FEEDBACK ====================
+        const pwd = document.getElementById('signup-password');
+        const confirmPwd = document.getElementById('signup-confirm');
+        if (confirmPwd) {
+            confirmPwd.addEventListener('input', () => {
+                if (confirmPwd.value !== pwd.value) {
+                    confirmPwd.setCustomValidity('Passwords do not match');
+                } else {
+                    confirmPwd.setCustomValidity('');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

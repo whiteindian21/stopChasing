@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings — Stop Chasing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bg: '#08080c',
+                        card: '#0e0e14',
+                        cardHover: '#141420',
+                        border: '#1a1a28',
+                        borderHover: '#2a2a3f',
+                        muted: '#5a5a70',
+                        accent: '#c9a87c',
+                        accentHover: '#dbb98d',
+                        success: '#5cb88f',
+                        warning: '#d4a55a',
+                        danger: '#c76d6d',
+                    },
+                    fontFamily: {
+                        display: ['Syne', 'sans-serif'],
+                        body: ['DM Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #08080c;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        .settings-gradient {
+            background: 
+                radial-gradient(ellipse 60% 40% at 0% 0%, rgba(201, 168, 124, 0.04) 0%, transparent 50%),
+                radial-gradient(ellipse 50% 30% at 100% 100%, rgba(139, 92, 246, 0.03) 0%, transparent 40%),
+                #08080c;
+        }
+        .card-base {
+            background: linear-gradient(145deg, #101018 0%, #0c0c12 100%);
+            border: 1px solid #1a1a28;
+        }
+        .input-field {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid #1a1a28;
+            transition: all 0.2s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: rgba(201, 168, 124, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #1a1a28;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .toggle-switch.active { background: #c9a87c; }
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+        .toggle-switch.active::after { transform: translateX(20px); }
+        
+        .progress-bar { background: rgba(201, 168, 124, 0.15); overflow: hidden; }
+        .progress-fill { background: linear-gradient(90deg, #c9a87c, #dbb98d); }
+        
+        .badge-glow { box-shadow: 0 0 20px -5px rgba(201, 168, 124, 0.2); }
+        .dropdown {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .focus-ring:focus-visible { outline: 2px solid #c9a87c; outline-offset: 2px; }
+        .btn-primary {
+            background: linear-gradient(135deg, #c9a87c 0%, #b8976b 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px -8px rgba(201, 168, 124, 0.35);
+        }
+        .btn-secondary {
+            background: rgba(201, 168, 124, 0.08);
+            border: 1px solid rgba(201, 168, 124, 0.2);
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: rgba(201, 168, 124, 0.12);
+            border-color: rgba(201, 168, 124, 0.35);
+        }
+    </style>
+</head>
+<body class="settings-gradient">
+    <!-- Top Navigation -->
+    <nav class="sticky top-0 z-50 bg-bg/90 backdrop-blur-xl border-b border-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <a href="dashboard.html" class="font-display font-bold text-xl text-white">Stop Chasing</a>
+                <div class="flex items-center gap-3 sm:gap-4">
+                    <div class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border badge-glow">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9a87c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                        </svg>
+                        <span id="credits-display" class="text-sm font-medium text-white">— Credits</span>
+                    </div>
+                    <a href="upgrade.html" class="btn-secondary px-4 py-2 rounded-full text-sm font-medium text-accent focus-ring hidden sm:block">Upgrade</a>
+                    <div class="relative">
+                        <button id="profile-btn" class="w-10 h-10 rounded-full bg-gradient-to-br from-accent/30 to-accent/10 flex items-center justify-center focus-ring border border-border hover:border-accent/30 transition-colors" aria-label="Profile menu" aria-expanded="false">
+                            <span id="profile-initials" class="font-semibold text-accent text-sm">—</span>
+                        </button>
+                        <div id="profile-dropdown" class="dropdown absolute right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-2xl py-2">
+                            <div class="px-4 py-2 text-sm text-white/50 border-b border-border mb-2">
+                                Signed in as <span id="dropdown-email" class="text-white/80"></span>
+                            </div>
+                            <a href="settings.html" class="block px-4 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors">Settings</a>
+                            <a href="#" class="block px-4 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors">Billing</a>
+                            <div class="border-t border-border my-2"></div>
+                            <a href="#" id="sign-out-link" class="block px-4 py-2.5 text-sm text-muted hover:text-white hover:bg-white/5 transition-colors">Sign Out</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        
+        <!-- Header -->
+        <header class="mb-10">
+            <h1 class="font-display font-bold text-2xl sm:text-3xl text-white mb-2">Settings</h1>
+            <p class="text-muted text-base sm:text-lg">Manage your account and subscription.</p>
+        </header>
+
+        <div class="space-y-8">
+            
+            <!-- Section 1: Account Information -->
+            <section class="card-base rounded-2xl p-6 sm:p-8">
+                <h2 class="font-display font-bold text-lg text-white mb-6">Account</h2>
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm text-muted mb-2">Email Address</label>
+                        <input id="email-input" type="email" class="input-field w-full px-4 py-3 rounded-xl text-white text-sm" placeholder="your@email.com">
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
+                        <button id="change-password-btn" class="text-sm text-accent hover:text-accentHover transition-colors focus-ring rounded">Change Password</button>
+                        <button id="save-account-btn" class="btn-primary px-6 py-2.5 rounded-xl font-semibold text-bg text-sm focus-ring">Save Changes</button>
+                    </div>
+                    <div id="account-message" class="text-sm hidden"></div>
+                </div>
+            </section>
+
+            <!-- Section 2: Subscription -->
+            <section class="card-base rounded-2xl p-6 sm:p-8">
+                <h2 class="font-display font-bold text-lg text-white mb-6">Subscription</h2>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-muted text-sm">Current Plan</span>
+                        <span id="current-plan" class="text-white font-medium text-sm">Free</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-muted text-sm">Credits Remaining</span>
+                        <span id="credits-remaining" class="text-white font-medium text-sm">—</span>
+                    </div>
+                    <div id="billing-date-row" class="flex justify-between items-center py-2 hidden">
+                        <span class="text-muted text-sm">Next Billing Date</span>
+                        <span id="billing-date" class="text-white font-medium text-sm">—</span>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="pt-4 border-t border-border mt-4">
+                        <div id="sub-free-actions">
+                            <a href="upgrade.html" class="btn-primary w-full sm:w-auto px-6 py-3 rounded-xl font-semibold text-bg text-sm inline-block text-center">Upgrade Plan</a>
+                        </div>
+                        <div id="sub-paid-actions" class="hidden space-y-3">
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <a href="#" class="btn-secondary flex-1 text-center px-4 py-2.5 rounded-xl text-sm font-medium text-accent focus-ring">Manage Billing</a>
+                                <button id="cancel-sub-btn" class="flex-1 text-danger text-sm hover:text-danger/80 transition-colors py-2.5">Cancel Subscription</button>
+                            </div>
+                        </div>
+                        <p class="text-xs text-muted mt-4">Subscriptions renew automatically unless canceled.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: Credit Usage -->
+            <section class="card-base rounded-2xl p-6 sm:p-8">
+                <h2 class="font-display font-bold text-lg text-white mb-6">Credit Usage</h2>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-muted text-sm">Credits Used This Month</span>
+                        <span id="credits-used" class="text-white font-medium text-sm">—</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-muted text-sm">Credits Remaining</span>
+                        <span id="credits-remaining-stat" class="text-white font-medium text-sm">—</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-muted text-sm">Monthly Reset Date</span>
+                        <span id="reset-date" class="text-white font-medium text-sm">—</span>
+                    </div>
+                    <div class="pt-4">
+                        <div class="progress-bar h-2 rounded-full">
+                            <div id="credit-progress" class="progress-fill h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <p class="text-xs text-muted mt-2 text-right"><span id="credit-percent">0</span>% used</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 4: Privacy & Data -->
+            <section class="card-base rounded-2xl p-6 sm:p-8">
+                <h2 class="font-display font-bold text-lg text-white mb-6">Privacy</h2>
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white text-sm font-medium">Save Conversation History</p>
+                            <p class="text-muted text-xs mt-1">Store your past conversations for analysis.</p>
+                        </div>
+                        <div id="toggle-history" class="toggle-switch active" role="switch" aria-checked="true" tabindex="0"></div>
+                    </div>
+                    <div class="pt-6 border-t border-border">
+                        <button id="delete-account-btn" class="text-danger text-sm hover:text-danger/80 transition-colors focus-ring rounded">Delete Account</button>
+                        <p class="text-xs text-muted mt-2">Deleting your account permanently removes all saved conversations.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 5: Logout -->
+            <section class="text-center pt-4 pb-8">
+                <button id="logout-btn" class="px-8 py-3 rounded-xl border border-border text-white/70 hover:text-white hover:border-borderHover transition-all text-sm font-medium focus-ring">
+                    Log Out
+                </button>
+            </section>
+
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://rwcwuugxlfjqxnkwdavt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3Y3d1dWd4bGZqcXhua3dkYXZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2ODMzMzMsImV4cCI6MjA4NjI1OTMzM30.ZscCHxYa2LWw60yB2XKhbo9b8Qs3iZKeJZYhIzPUifw';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUser = null;
+        let profile = null;
+
+        // Plans config for logic
+        const plans = {
+            'Free': { limit: 5 },
+            'Starter': { limit: 60 },
+            'Pro': { limit: 200 },
+            'Elite': { limit: 9999 } // effectively unlimited
+        };
+
+        async function initSettings() {
+            try {
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
+                if (error) throw error;
+                if (!session) { window.location.href = 'auth.html'; return; }
+
+                currentUser = session.user;
+                
+                // Fetch profile
+                const { data: profileData } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+
+                profile = profileData || { credits: 5, subscription_tier: 'Free', save_history: true };
+                
+                updateUI();
+                
+            } catch (err) {
+                console.error('Init error:', err);
+                window.location.href = 'auth.html';
+            }
+        }
+
+        function updateUI() {
+            // Nav
+            document.getElementById('profile-initials').textContent = (currentUser.email || 'US').substring(0, 2).toUpperCase();
+            document.getElementById('dropdown-email').textContent = currentUser.email;
+            document.getElementById('credits-display').textContent = `${profile.credits || 0} Credits`;
+
+            // Account
+            document.getElementById('email-input').value = currentUser.email;
+
+            // Subscription
+            const tier = profile.subscription_tier || 'Free';
+            const isPaid = tier !== 'Free';
+            
+            document.getElementById('current-plan').textContent = tier;
+            document.getElementById('credits-remaining').textContent = profile.credits || 0;
+
+            if (isPaid) {
+                document.getElementById('sub-free-actions').classList.add('hidden');
+                document.getElementById('sub-paid-actions').classList.remove('hidden');
+                document.getElementById('billing-date-row').classList.remove('hidden');
+                // Mock billing date for demo
+                const nextMonth = new Date();
+                nextMonth.setMonth(nextMonth.getMonth() + 1);
+                document.getElementById('billing-date').textContent = nextMonth.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            } else {
+                document.getElementById('sub-free-actions').classList.remove('hidden');
+                document.getElementById('sub-paid-actions').classList.add('hidden');
+            }
+
+            // Credit Usage
+            const planLimit = plans[tier]?.limit || 5;
+            const creditsUsed = planLimit - (profile.credits || 0);
+            const percent = Math.max(0, Math.min((creditsUsed / planLimit) * 100, 100));
+
+            document.getElementById('credits-used').textContent = Math.max(0, creditsUsed);
+            document.getElementById('credits-remaining-stat').textContent = profile.credits || 0;
+            document.getElementById('reset-date').textContent = '1st of every month';
+            document.getElementById('credit-progress').style.width = percent + '%';
+            document.getElementById('credit-percent').textContent = Math.round(percent);
+
+            // Privacy
+            const toggle = document.getElementById('toggle-history');
+            if (profile.save_history === false) {
+                toggle.classList.remove('active');
+                toggle.setAttribute('aria-checked', 'false');
+            } else {
+                toggle.classList.add('active');
+                toggle.setAttribute('aria-checked', 'true');
+            }
+        }
+
+        // --- Event Handlers ---
+
+        async function handleSaveAccount() {
+            const email = document.getElementById('email-input').value;
+            const msgEl = document.getElementById('account-message');
+            
+            if (email !== currentUser.email) {
+                const { error } = await supabaseClient.auth.updateUser({ email });
+                if (error) {
+                    showMessage(msgEl, error.message, true);
+                } else {
+                    showMessage(msgEl, 'Confirmation email sent to new address.', false);
+                }
+            } else {
+                showMessage(msgEl, 'No changes detected.', false);
+            }
+        }
+
+        async function handleChangePassword() {
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(currentUser.email);
+            if (error) alert(error.message);
+            else alert('Password reset email sent!');
+        }
+
+        async function handleToggleHistory() {
+            const toggle = document.getElementById('toggle-history');
+            const newState = !toggle.classList.contains('active');
+            
+            // Optimistic UI update
+            toggle.classList.toggle('active');
+            
+            const { error } = await supabaseClient
+                .from('profiles')
+                .update({ save_history: newState })
+                .eq('id', currentUser.id);
+
+            if (error) {
+                // Revert on error
+                toggle.classList.toggle('active');
+                console.error(error);
+            }
+        }
+
+        async function handleDeleteAccount() {
+            if (confirm('Are you sure? This cannot be undone.')) {
+                // Note: Usually requires server-side function to delete auth user cleanly
+                alert('Account deletion requested. In production, this would trigger a backend function.');
+                // await supabaseClient.rpc('delete_user_account'); 
+            }
+        }
+
+        function showMessage(el, text, isError) {
+            el.textContent = text;
+            el.className = `text-sm ${isError ? 'text-danger' : 'text-success'}`;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 4000);
+        }
+
+        async function signOut() {
+            await supabaseClient.auth.signOut();
+            window.location.href = 'auth.html';
+        }
+
+        // --- Init ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initSettings();
+
+            // Profile Dropdown
+            const profileBtn = document.getElementById('profile-btn');
+            const profileDropdown = document.getElementById('profile-dropdown');
+            profileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                profileDropdown.classList.toggle('active');
+            });
+            document.addEventListener('click', () => profileDropdown.classList.remove('active'));
+
+            // Buttons
+            document.getElementById('save-account-btn').addEventListener('click', handleSaveAccount);
+            document.getElementById('change-password-btn').addEventListener('click', handleChangePassword);
+            document.getElementById('toggle-history').addEventListener('click', handleToggleHistory);
+            document.getElementById('toggle-history').addEventListener('keydown', (e) => { if(e.key === 'Enter') handleToggleHistory(); });
+            document.getElementById('delete-account-btn').addEventListener('click', handleDeleteAccount);
+            document.getElementById('logout-btn').addEventListener('click', signOut);
+            document.getElementById('sign-out-link').addEventListener('click', (e) => { e.preventDefault(); signOut(); });
+        });
+    </script>
+</body>
+</html>

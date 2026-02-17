@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apartment 4B | FairShare Hub</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#f8f7f4">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: '#f8f7f4',
+            fg: '#1a1a1a',
+            muted: '#6b6b6b',
+            accent: '#2e7d32',
+            'accent-light': '#4a9f4e',
+            'accent-soft': '#e8f5e9',
+            card: '#ffffff',
+            border: '#e5e5e5',
+            'error': '#c62828',
+            'error-soft': '#fef2f2',
+            'positive': '#2e7d32',
+            'positive-soft': '#e8f5e9',
+            'negative': '#b71c1c',
+            'negative-soft': '#ffebee',
+            'warning': '#b45309',
+            'warning-soft': '#fffbeb',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            'soft': '0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)',
+            'soft-lg': '0 8px 40px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: #f8f7f4;
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible {
+      outline: 2px solid #2e7d32;
+      outline-offset: 2px;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #d5d5d5; }
+
+    /* Sidebar */
+    .sidebar { transition: transform 0.3s ease, width 0.3s ease; }
+    .sidebar.collapsed { width: 72px; }
+    .sidebar.collapsed .sidebar-label { opacity: 0; width: 0; }
+    .sidebar-label { transition: opacity 0.2s ease, width 0.2s ease; white-space: nowrap; overflow: hidden; }
+
+    /* Mobile drawer */
+    .drawer-overlay {
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .drawer-overlay.open { opacity: 1; visibility: visible; }
+    .drawer { transform: translateX(-100%); transition: transform 0.3s ease; }
+    .drawer-overlay.open .drawer { transform: translateX(0); }
+
+    /* Dropdown */
+    .dropdown-menu {
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: all 0.2s ease;
+    }
+    .dropdown-menu.open { opacity: 1; visibility: visible; transform: translateY(0); }
+
+    /* Card hover */
+    .card-interactive { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card-interactive:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); }
+
+    /* Loading skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* Entrance animations */
+    @media (prefers-reduced-motion: no-preference) {
+      .animate-slide-up { animation: slideUp 0.5s ease forwards; }
+      .stagger-1 { animation-delay: 0.05s; opacity: 0; }
+      .stagger-2 { animation-delay: 0.1s; opacity: 0; }
+      .stagger-3 { animation-delay: 0.15s; opacity: 0; }
+      .stagger-4 { animation-delay: 0.2s; opacity: 0; }
+      .stagger-5 { animation-delay: 0.25s; opacity: 0; }
+      .stagger-6 { animation-delay: 0.3s; opacity: 0; }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Slide panel */
+    .slide-panel {
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+    .slide-panel.open { transform: translateX(0); }
+
+    /* Progress bar animation */
+    .progress-fill {
+      transition: width 0.6s ease;
+    }
+
+    /* Fairness gradient */
+    .fairness-ring {
+      background: conic-gradient(#2e7d32 0deg, #2e7d32 calc(var(--percent) * 3.6deg), #e5e5e5 calc(var(--percent) * 3.6deg));
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  
+  <!-- Mobile Drawer Overlay -->
+  <div id="drawerOverlay" class="drawer-overlay fixed inset-0 bg-black/40 z-40 lg:hidden">
+    <div class="drawer w-64 h-full bg-card shadow-soft-lg">
+      <div class="p-4 border-b border-border">
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-xl bg-accent flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <span class="text-lg font-semibold text-fg">FairShare</span>
+        </div>
+      </div>
+      <nav class="p-3" id="mobileNav"></nav>
+    </div>
+  </div>
+
+  <!-- Top Navbar -->
+  <header class="sticky top-0 z-30 bg-card/80 backdrop-blur-md border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 lg:px-6">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Left: Logo & Menu -->
+        <div class="flex items-center gap-3">
+          <button onclick="toggleDrawer()" class="lg:hidden p-2 -ml-2 text-muted hover:text-fg transition-colors" aria-label="Open menu">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+          
+          <a href="dashboard.html" class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <span class="hidden sm:block text-lg font-semibold text-fg tracking-tight">FairShare</span>
+          </a>
+        </div>
+
+        <!-- Center: Group Selector -->
+        <div class="hidden md:block relative">
+          <button onclick="toggleGroupDropdown()" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-50 hover:bg-neutral-100 transition-colors" aria-haspopup="listbox">
+            <div class="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center">
+              <svg class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+              </svg>
+            </div>
+            <span id="currentGroupName" class="font-medium text-fg">Apartment 4B</span>
+            <svg class="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          
+          <div id="groupDropdown" class="dropdown-menu absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-card rounded-xl shadow-soft-lg border border-border py-2 z-50">
+            <div id="groupDropdownList"></div>
+            <div class="border-t border-border mt-2 pt-2">
+              <a href="onboarding.html" class="flex items-center gap-2 px-4 py-2 text-sm text-muted hover:text-fg hover:bg-neutral-50 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Create New Group
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Actions -->
+        <div class="flex items-center gap-2">
+          <button onclick="openExpenseModal()" class="hidden sm:flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-light text-white font-medium rounded-xl transition-all duration-200 hover:shadow-lg active:scale-[0.99]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            <span>Add Expense</span>
+          </button>
+          
+          <button onclick="openExpenseModal()" class="sm:hidden p-2 bg-accent hover:bg-accent-light text-white rounded-xl transition-colors" aria-label="Add expense">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+          </button>
+          
+          <button class="relative p-2 text-muted hover:text-fg transition-colors" aria-label="Notifications">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+          </button>
+          
+          <!-- User Menu -->
+          <div class="relative">
+            <button onclick="toggleUserMenu()" class="flex items-center gap-2 p-1 rounded-xl hover:bg-neutral-50 transition-colors" aria-haspopup="true">
+              <div class="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-sm font-medium text-accent">JD</div>
+              <svg class="hidden sm:block w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            
+            <div id="userMenu" class="dropdown-menu absolute top-full right-0 mt-2 w-56 bg-card rounded-xl shadow-soft-lg border border-border py-2 z-50">
+              <div class="px-4 py-3 border-b border-border">
+                <p class="font-medium text-fg">John Doe</p>
+                <p class="text-sm text-muted">john@example.com</p>
+              </div>
+              <div class="py-1">
+                <a href="settings.html" class="flex items-center gap-3 px-4 py-2.5 text-sm text-muted hover:text-fg hover:bg-neutral-50 transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  Settings
+                </a>
+                <a href="pricing.html" class="flex items-center gap-3 px-4 py-2.5 text-sm text-muted hover:text-fg hover:bg-neutral-50 transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                  </svg>
+                  Upgrade to Pro
+                </a>
+              </div>
+              <div class="border-t border-border pt-1">
+                <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-error hover:bg-error-soft transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                  </svg>
+                  Log out
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Layout -->
+  <div class="flex">
+    
+    <!-- Desktop Sidebar -->
+    <aside class="sidebar hidden lg:flex flex-col w-56 h-[calc(100vh-64px)] sticky top-16 border-r border-border bg-card/50">
+      <nav class="flex-1 p-3" id="desktopNav"></nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 min-w-0">
+      <div class="max-w-5xl mx-auto px-4 lg:px-6 py-6 lg:py-8">
+        
+        <!-- Loading State -->
+        <div id="loadingState" class="space-y-6">
+          <div class="skeleton w-48 h-10 rounded-lg mb-2"></div>
+          <div class="skeleton w-32 h-5 rounded-lg mb-8"></div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="skeleton h-32 rounded-2xl"></div>
+            <div class="skeleton h-32 rounded-2xl"></div>
+            <div class="skeleton h-32 rounded-2xl"></div>
+          </div>
+        </div>
+
+        <!-- Error State: Invalid Group -->
+        <div id="errorState" class="hidden">
+          <div class="text-center py-16">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-error-soft flex items-center justify-center">
+              <svg class="w-10 h-10 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <h1 class="text-2xl font-semibold text-fg mb-3">Group Not Found</h1>
+            <p class="text-muted mb-8 max-w-md mx-auto">This group doesn't exist or you don't have access to it.</p>
+            <a href="dashboard.html" class="inline-flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-light text-white font-medium rounded-xl transition-all duration-200">
+              Go to Dashboard
+            </a>
+          </div>
+        </div>
+
+        <!-- Empty State: No Members -->
+        <div id="emptyMembersState" class="hidden">
+          <div class="text-center py-16">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-accent-soft flex items-center justify-center">
+              <svg class="w-10 h-10 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <h1 class="text-2xl font-semibold text-fg mb-3">Invite someone to start</h1>
+            <p class="text-muted mb-8 max-w-md mx-auto">You're the only one here. Invite friends or partners to start sharing expenses.</p>
+            <button onclick="openInviteModal()" class="inline-flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-light text-white font-medium rounded-xl transition-all duration-200">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Invite Members
+            </button>
+          </div>
+        </div>
+
+        <!-- Main Group Content -->
+        <div id="groupContent" class="hidden space-y-8">
+          
+          <!-- Group Header -->
+          <section class="animate-slide-up stagger-1">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+              <div>
+                <h1 id="groupTitle" class="text-2xl sm:text-3xl font-semibold text-fg">Apartment 4B</h1>
+                <p id="groupMeta" class="text-muted mt-1">3 members · USD</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="openInviteModal()" class="flex items-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent-light text-white font-medium rounded-xl transition-all duration-200 hover:shadow-lg active:scale-[0.99]">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                  </svg>
+                  <span>Invite</span>
+                </button>
+                <div class="relative">
+                  <button onclick="toggleGroupMenu()" class="p-2.5 text-muted hover:text-fg hover:bg-neutral-100 rounded-xl transition-colors" aria-label="Group options">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                    </svg>
+                  </button>
+                  <div id="groupMenu" class="dropdown-menu absolute top-full right-0 mt-2 w-48 bg-card rounded-xl shadow-soft-lg border border-border py-2 z-50">
+                    <button onclick="editGroup()" class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-muted hover:text-fg hover:bg-neutral-50 transition-colors">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                      </svg>
+                      Edit Group
+                    </button>
+                    <button onclick="leaveGroup()" class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-error hover:bg-error-soft transition-colors">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                      </svg>
+                      Leave Group
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Balance Overview Cards -->
+          <section class="animate-slide-up stagger-2">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              
+              <!-- Your Position -->
+              <div id="positionCard" class="bg-card rounded-2xl p-5 shadow-soft">
+                <p class="text-sm text-muted mb-2">Your Position</p>
+                <p id="positionAmount" class="text-2xl sm:text-3xl font-semibold text-negative mb-1">You owe $120</p>
+                <p id="positionHelper" class="text-sm text-muted">To Sarah K.</p>
+              </div>
+
+              <!-- Monthly Spending -->
+              <div class="bg-card rounded-2xl p-5 shadow-soft">
+                <p class="text-sm text-muted mb-2">This Month</p>
+                <p id="monthlySpend" class="text-2xl sm:text-3xl font-semibold text-fg mb-1">$1,240</p>
+                <p class="text-sm text-muted">Total group spending</p>
+              </div>
+
+              <!-- Fairness Score -->
+              <div class="bg-card rounded-2xl p-5 shadow-soft">
+                <div class="flex items-center justify-between mb-3">
+                  <p class="text-sm text-muted">Fairness Score</p>
+                  <div class="w-10 h-10 rounded-full fairness-ring flex items-center justify-center" style="--percent: 92">
+                    <div class="w-8 h-8 rounded-full bg-card flex items-center justify-center">
+                      <span class="text-xs font-semibold text-accent">92%</span>
+                    </div>
+                  </div>
+                </div>
+                <p class="text-lg font-semibold text-fg mb-1">Balanced</p>
+                <p class="text-sm text-muted">Contributions are proportional</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Member Breakdown -->
+          <section class="animate-slide-up stagger-3">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-semibold text-fg">Members</h2>
+              <button onclick="openInviteModal()" class="text-sm text-accent hover:text-accent-light transition-colors">
+                + Invite
+              </button>
+            </div>
+            
+            <div id="memberGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+          </section>
+
+          <!-- Settle Up Section -->
+          <section id="settleSection" class="animate-slide-up stagger-4">
+            <div id="settleCard" class="bg-negative-soft border border-negative/20 rounded-2xl p-5">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-xl bg-negative/10 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-negative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="font-semibold text-fg">You owe $120</p>
+                    <p class="text-sm text-muted">Settle up with Sarah K.</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button onclick="openSettleModal()" class="px-5 py-2.5 bg-negative hover:bg-negative/90 text-white font-medium rounded-xl transition-colors">
+                    Settle via PayPal
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Alternative: Being Owed -->
+            <div id="owedCard" class="hidden bg-positive-soft border border-positive/20 rounded-2xl p-5">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-xl bg-positive/10 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-positive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="font-semibold text-fg">You're owed $240</p>
+                    <p class="text-sm text-muted">2 members need to settle</p>
+                  </div>
+                </div>
+                <button onclick="sendReminders()" class="px-5 py-2.5 bg-positive hover:bg-positive/90 text-white font-medium rounded-xl transition-colors">
+                  Send Reminders
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Expenses Feed -->
+          <section class="animate-slide-up stagger-5">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-semibold text-fg">Expenses</h2>
+              <button onclick="openExpenseModal()" class="flex items-center gap-1.5 text-sm text-accent hover:text-accent-light transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add
+              </button>
+            </div>
+
+            <div id="expenseList" class="space-y-2"></div>
+
+            <div id="emptyExpenses" class="hidden bg-card rounded-2xl p-8 shadow-soft text-center">
+              <div class="w-16 h-16 mx-auto mb-4 rounded-xl bg-neutral-100 flex items-center justify-center">
+                <svg class="w-8 h-8 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+              </div>
+              <p class="text-fg font-medium mb-2">No expenses yet</p>
+              <p class="text-muted text-sm mb-4">Add your first shared expense to get started.</p>
+              <button onclick="openExpenseModal()" class="inline-flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-light text-white font-medium rounded-xl transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add Expense
+              </button>
+            </div>
+          </section>
+
+          <!-- Bottom Cards Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-slide-up stagger-6">
+            
+            <!-- Recurring Preview -->
+            <div class="bg-card rounded-2xl p-5 shadow-soft">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-fg">Upcoming Bills</h3>
+                <a href="recurring.html" class="text-sm text-accent hover:text-accent-light transition-colors">Manage</a>
+              </div>
+              <div id="recurringList" class="space-y-3"></div>
+            </div>
+
+            <!-- Goals Preview -->
+            <div class="bg-card rounded-2xl p-5 shadow-soft">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-fg">Shared Goals</h3>
+                <a href="goals.html" class="text-sm text-accent hover:text-accent-light transition-colors">View All</a>
+              </div>
+              <div id="goalsPreview"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Member Detail Panel -->
+  <div id="memberPanel" class="slide-panel fixed top-0 right-0 h-full w-full sm:w-96 bg-card shadow-soft-lg z-50 overflow-y-auto">
+    <div class="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between">
+      <h3 class="font-semibold text-fg">Member Details</h3>
+      <button onclick="closeMemberPanel()" class="p-2 text-muted hover:text-fg transition-colors" aria-label="Close">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div id="memberPanelContent" class="p-4"></div>
+  </div>
+
+  <!-- Add Expense Modal -->
+  <div id="expenseModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 opacity-0 invisible transition-all duration-300">
+    <div class="bg-card rounded-2xl shadow-soft-lg w-full max-w-md max-h-[90vh] overflow-y-auto transform scale-95 transition-transform duration-300" id="expenseModalContent">
+      <div class="sticky top-0 bg-card p-6 pb-4 flex items-center justify-between border-b border-border">
+        <h2 class="text-xl font-semibold text-fg">Add Expense</h2>
+        <button onclick="closeExpenseModal()" class="p-2 text-muted hover:text-fg transition-colors" aria-label="Close">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <form id="expenseForm" class="p-6 pt-4 space-y-4">
+        <div>
+          <label for="expenseName" class="block text-sm font-medium text-fg mb-1.5">Description</label>
+          <input type="text" id="expenseName" placeholder="Groceries, Rent, Dinner..." class="w-full px-4 py-3 bg-neutral-50 border border-border rounded-xl focus:outline-none focus:border-accent transition-colors" required>
+        </div>
+
+        <div>
+          <label for="expenseCategory" class="block text-sm font-medium text-fg mb-1.5">Category</label>
+          <select id="expenseCategory" class="w-full px-4 py-3 bg-neutral-50 border border-border rounded-xl focus:outline-none focus:border-accent transition-colors">
+            <option value="general">General</option>
+            <option value="groceries">Groceries</option>
+            <option value="utilities">Utilities</option>
+            <option value="rent">Rent</option>
+            <option value="dining">Dining Out</option>
+            <option value="transport">Transport</option>
+            <option value="entertainment">Entertainment</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="expenseAmount" class="block text-sm font-medium text-fg mb-1.5">Amount</label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-muted font-medium">$</span>
+            <input type="number" id="expenseAmount" placeholder="0.00" step="0.01" min="0" class="w-full pl-8 pr-4 py-3 bg-neutral-50 border border-border rounded-xl focus:outline-none focus:border-accent transition-colors" required>
+          </div>
+        </div>
+
+        <div>
+          <label for="expensePaidBy" class="block text-sm font-medium text-fg mb-1.5">Paid by</label>
+          <select id="expensePaidBy" class="w-full px-4 py-3 bg-neutral-50 border border-border rounded-xl focus:outline-none focus:border-accent transition-colors">
+            <option value="you">You</option>
+            <option value="sarah">Sarah K.</option>
+            <option value="mike">Mike L.</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-fg mb-2">Split method</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" class="split-btn active py-2 px-3 bg-accent text-white rounded-lg text-sm font-medium transition-colors" onclick="setSplitMethod('equal', this)">Equal</button>
+            <button type="button" class="split-btn py-2 px-3 bg-neutral-50 text-fg rounded-lg text-sm font-medium hover:bg-neutral-100 transition-colors" onclick="setSplitMethod('percentage', this)">Percentage</button>
+            <button type="button" class="split-btn py-2 px-3 bg-neutral-50 text-fg rounded-lg text-sm font-medium hover:bg-neutral-100 transition-colors" onclick="setSplitMethod('fixed', this)">Fixed</button>
+            <button type="button" class="split-btn py-2 px-3 bg-neutral-50 text-fg rounded-lg text-sm font-medium hover:bg-neutral-100 transition-colors" onclick="setSplitMethod('income', this)">Income-Based</button>
+          </div>
+        </div>
+
+        <div>
+          <label for="expenseDate" class="block text-sm font-medium text-fg mb-1.5">Date</label>
+          <input type="date" id="expenseDate" class="w-full px-4 py-3 bg-neutral-50 border border-border rounded-xl focus:outline-none focus:border-accent transition-colors">
+        </div>
+
+        <button type="submit" class="w-full py-3.5 bg-accent hover:bg-accent-light text-white font-medium rounded-xl transition-all duration-200 hover:shadow-lg active:scale-[0.99] mt-2">
+          Add Expense
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Invite Modal -->
+  <div id="inviteModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 opacity-0 invisible transition-all duration-300">
+    <div class="bg-card rounded-2xl shadow-soft-lg w-full max-w-sm transform scale-95 transition-transform duration-300" id="inviteModalContent">
+      <div class="p-6">
+        <div class="text-center mb-6">
+          <div class="w-14 h-14 mx-auto mb-4 rounded-xl bg-accent-soft flex items-center justify-center">
+            <svg class="w-7 h-7 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+            </svg>
+          </div>
+          <h2 class="text-xl font-semibold text-fg mb-2">Invite to Group</h2>
+          <p class="text-muted text-sm">Share this link with anyone you want to join.</p>
+        </div>
+
+        <div class="bg-neutral-50 rounded-xl p-3 mb-4">
+          <p class="text-xs text-muted mb-1">Invite Link</p>
+          <div class="flex items-center gap-2">
+            <code id="inviteLink" class="flex-1 text-sm text-fg bg-transparent outline-none overflow-hidden text-ellipsis">https://fairshare.app/invite/abc123</code>
+            <button onclick="copyInviteLink()" class="p-2 text-accent hover:bg-accent-soft rounded-lg transition-colors" aria-label="Copy link">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <p id="copySuccess" class="hidden text-sm text-accent text-center mb-4">Link copied to clipboard!</p>
+
+        <div class="flex gap-3">
+          <button onclick="closeInviteModal()" class="flex-1 py-2.5 bg-neutral-50 hover:bg-neutral-100 text-fg font-medium rounded-xl transition-colors">
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================
+    // Data: Mock Group
+    // =========================================
+    const mockGroup = {
+      id: 'grp_abc123',
+      name: 'Apartment 4B',
+      memberCount: 3,
+      currency: 'USD',
+      symbol: '$',
+      userPosition: -120,
+      userIsOwed: false,
+      monthlySpend: 1240,
+      fairness: 92
+    };
+
+    const mockMembers = [
+      { id: 'you', name: 'You', initials: 'JD', balance: -120, isOwed: false, income: 5200, totalPaid: 340, totalOwed: 460, color: 'accent', isYou: true },
+      { id: 'sarah', name: 'Sarah K.', initials: 'SK', balance: 85, isOwed: true, income: 4800, totalPaid: 520, totalOwed: 435, color: 'blue', topContributor: true },
+      { id: 'mike', name: 'Mike L.', initials: 'ML', balance: 35, isOwed: true, income: 4500, totalPaid: 380, totalOwed: 345, color: 'purple' }
+    ];
+
+    const mockExpenses = [
+      { id: 1, name: 'Groceries - Whole Foods', category: 'Groceries', paidBy: 'Sarah K.', amount: 85.50, yourShare: 28.50, splitMethod: 'Equal', date: 'Today', youOwe: true },
+      { id: 2, name: 'Electric Bill', category: 'Utilities', paidBy: 'You', amount: 120, yourShare: 40, splitMethod: 'Equal', date: 'Yesterday', youOwe: false },
+      { id: 3, name: 'Monthly Rent', category: 'Rent', paidBy: 'Mike L.', amount: 1800, yourShare: 600, splitMethod: 'Income-Based', date: '3 days ago', youOwe: true },
+      { id: 4, name: 'Netflix', category: 'Entertainment', paidBy: 'You', amount: 15.99, yourShare: 5.33, splitMethod: 'Equal', date: '1 week ago', youOwe: false },
+      { id: 5, name: 'Internet', category: 'Utilities', paidBy: 'Sarah K.', amount: 60, yourShare: 20, splitMethod: 'Equal', date: '1 week ago', youOwe: true }
+    ];
+
+    const mockRecurring = [
+      { name: 'Rent', amount: 1800, dueIn: '3 days', auto: true },
+      { name: 'WiFi', amount: 60, dueIn: '5 days', auto: false }
+    ];
+
+    const mockGoals = [
+      { name: 'Vacation Fund', current: 3200, target: 10000 }
+    ];
+
+    // =========================================
+    // Navigation Data
+    // =========================================
+    const navItems = [
+      { icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>', label: 'Dashboard', href: 'dashboard.html', active: false },
+      { icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>', label: 'Groups', href: '#', active: true },
+      { icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>', label: 'Recurring', href: 'recurring.html', active: false },
+      { icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>', label: 'Goals', href: 'goals.html', active: false },
+      { icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>', label: 'Reports', href: 'reports.html', active: false },
+      { icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>', label: 'Settings', href: 'settings.html', active: false }
+    ];
+
+    const allGroups = [
+      { id: 'grp_abc123', name: 'Apartment 4B', memberCount: 3 },
+      { id: 'grp_def456', name: 'London Flat', memberCount: 2 },
+      { id: 'grp_ghi789', name: 'Bali Trip', memberCount: 4 }
+    ];
+
+    // =========================================
+    // State
+    // =========================================
+    let currentGroupId = 'grp_abc123';
+    let splitMethod = 'equal';
+
+    // =========================================
+    // Auth Check (Disabled for Design)
+    // =========================================
+    function checkAuth() {
+      // Bypassing auth check for design work
+      return true;
+    }
+
+    // =========================================
+    // Render Navigation
+    // =========================================
+    function renderNavigation() {
+      const navHtml = navItems.map(item => `
+        <a href="${item.href}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl ${item.active ? 'bg-accent/10 text-accent' : 'text-muted hover:text-fg hover:bg-neutral-50'} transition-colors">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">${item.icon}</svg>
+          <span class="sidebar-label font-medium">${item.label}</span>
+        </a>
+      `).join('');
+      
+      const desktopNav = document.getElementById('desktopNav');
+      const mobileNav = document.getElementById('mobileNav');
+      
+      if (desktopNav) desktopNav.innerHTML = `<div class="space-y-1">${navHtml}</div>`;
+      if (mobileNav) mobileNav.innerHTML = `<div class="space-y-1">${navHtml}</div>`;
+    }
+
+    // =========================================
+    // Render Group Dropdown
+    // =========================================
+    function renderGroupDropdown() {
+      const dropdownList = document.getElementById('groupDropdownList');
+      if (!dropdownList) return;
+      
+      dropdownList.innerHTML = allGroups.map(group => `
+        <a href="group.html?id=${group.id}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 transition-colors ${group.id === currentGroupId ? 'bg-accent/5' : ''}">
+          <div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-fg">${group.name}</p>
+            <p class="text-xs text-muted">${group.memberCount} members</p>
+          </div>
+        </a>
+      `).join('');
+    }
+
+    // =========================================
+    // Render Members
+    // =========================================
+    function renderMembers() {
+      const grid = document.getElementById('memberGrid');
+      if (!grid) return;
+      
+      grid.innerHTML = mockMembers.map(member => {
+        const balanceText = member.isOwed 
+          ? `Owed ${mockGroup.symbol}${member.balance}`
+          : `Owes ${mockGroup.symbol}${Math.abs(member.balance)}`;
+        const balanceClass = member.isOwed ? 'text-positive' : 'text-negative';
+        
+        return `
+          <div onclick="openMemberPanel('${member.id}')" class="card-interactive cursor-pointer bg-card rounded-xl p-4 shadow-soft flex items-center gap-3">
+            <div class="w-11 h-11 rounded-full bg-${member.color === 'accent' ? 'accent/10' : member.color + '-100'} flex items-center justify-center text-sm font-semibold text-${member.color === 'accent' ? 'accent' : member.color + '-600'}">
+              ${member.initials}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <p class="font-medium text-fg truncate">${member.name}</p>
+                ${member.topContributor ? '<span class="text-xs px-2 py-0.5 bg-accent-soft text-accent rounded-full">Top</span>' : ''}
+              </div>
+              <p class="text-sm ${balanceClass}">${balanceText}</p>
+            </div>
+            <svg class="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // =========================================
+    // Render Expenses
+    // =========================================
+    function renderExpenses() {
+      const list = document.getElementById('expenseList');
+      const emptyState = document.getElementById('emptyExpenses');
+      
+      if (!list) return;
+      
+      if (mockExpenses.length === 0) {
+        list.classList.add('hidden');
+        if (emptyState) emptyState.classList.remove('hidden');
+        return;
+      }
+      
+      list.innerHTML = mockExpenses.map(expense => `
+        <div onclick="openExpenseDetail(${expense.id})" class="card-interactive cursor-pointer bg-card rounded-xl p-4 shadow-soft">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-lg ${expense.youOwe ? 'bg-negative-soft' : 'bg-positive-soft'} flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 ${expense.youOwe ? 'text-negative' : 'text-positive'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${expense.youOwe ? 'M19 14l-7 7m0 0l-7-7m7 7V3' : 'M5 10l7-7m0 0l7 7m-7-7v18'}"/>
+                </svg>
+              </div>
+              <div>
+                <p class="font-medium text-fg">${expense.name}</p>
+                <p class="text-sm text-muted">${expense.paidBy} paid · ${expense.splitMethod} split</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="font-semibold text-fg">${mockGroup.symbol}${expense.amount.toFixed(2)}</p>
+              <p class="text-xs ${expense.youOwe ? 'text-negative' : 'text-positive'}">${expense.youOwe ? 'You owe' : 'You paid'} ${mockGroup.symbol}${expense.yourShare.toFixed(2)}</p>
+            </div>
+          </div>
+          <div class="flex items-center justify-between mt-3 pt-3 border-t border-border">
+            <span class="text-xs text-muted">${expense.category}</span>
+            <span class="text-xs text-muted">${expense.date}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // =========================================
+    // Render Recurring & Goals
+    // =========================================
+    function renderRecurring() {
+      const list = document.getElementById('recurringList');
+      if (!list) return;
+      
+      list.innerHTML = mockRecurring.map(item => `
+        <div class="flex items-center justify-between p-3 bg-neutral-50 rounded-xl">
+          <div>
+            <p class="font-medium text-fg">${item.name}</p>
+            <p class="text-sm text-muted">${item.auto ? 'Auto-add' : 'Due'} in ${item.dueIn}</p>
+          </div>
+          <p class="font-semibold text-fg">${mockGroup.symbol}${item.amount}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderGoals() {
+      const preview = document.getElementById('goalsPreview');
+      if (!preview) return;
+      
+      preview.innerHTML = mockGoals.map(goal => {
+        const percent = Math.round((goal.current / goal.target) * 100);
+        return `
+          <div class="p-3 bg-neutral-50 rounded-xl">
+            <div class="flex items-center justify-between mb-2">
+              <p class="font-medium text-fg">${goal.name}</p>
+              <p class="text-sm text-muted">${percent}%</p>
+            </div>
+            <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
+              <div class="progress-fill h-full bg-accent rounded-full" style="width: ${percent}%"></div>
+            </div>
+            <p class="text-sm text-muted mt-2">${mockGroup.symbol}${goal.current.toLocaleString()} of ${mockGroup.symbol}${goal.target.toLocaleString()}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // =========================================
+    // Toggle Functions
+    // =========================================
+    function toggleDrawer() {
+      const overlay = document.getElementById('drawerOverlay');
+      if (overlay) overlay.classList.toggle('open');
+    }
+
+    function toggleGroupDropdown() {
+      const dropdown = document.getElementById('groupDropdown');
+      if (dropdown) dropdown.classList.toggle('open');
+    }
+
+    function toggleUserMenu() {
+      const menu = document.getElementById('userMenu');
+      if (menu) menu.classList.toggle('open');
+    }
+
+    function toggleGroupMenu() {
+      const menu = document.getElementById('groupMenu');
+      if (menu) menu.classList.toggle('open');
+    }
+
+    // =========================================
+    // Modal Functions
+    // =========================================
+    function openExpenseModal() {
+      const modal = document.getElementById('expenseModal');
+      const content = document.getElementById('expenseModalContent');
+      if (modal) {
+        modal.classList.remove('invisible', 'opacity-0');
+        modal.classList.add('opacity-100');
+        if (content) content.classList.remove('scale-95');
+        document.body.style.overflow = 'hidden';
+        
+        // Set default date to today
+        const dateInput = document.getElementById('expenseDate');
+        if (dateInput) dateInput.valueAsDate = new Date();
+      }
+    }
+
+    function closeExpenseModal() {
+      const modal = document.getElementById('expenseModal');
+      const content = document.getElementById('expenseModalContent');
+      if (modal) {
+        modal.classList.add('opacity-0');
+        if (content) content.classList.add('scale-95');
+        setTimeout(() => {
+          modal.classList.add('invisible');
+          document.body.style.overflow = '';
+        }, 300);
+      }
+    }
+
+    function openInviteModal() {
+      const modal = document.getElementById('inviteModal');
+      const content = document.getElementById('inviteModalContent');
+      if (modal) {
+        modal.classList.remove('invisible', 'opacity-0');
+        modal.classList.add('opacity-100');
+        if (content) content.classList.remove('scale-95');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeInviteModal() {
+      const modal = document.getElementById('inviteModal');
+      const content = document.getElementById('inviteModalContent');
+      if (modal) {
+        modal.classList.add('opacity-0');
+        if (content) content.classList.add('scale-95');
+        setTimeout(() => {
+          modal.classList.add('invisible');
+          document.body.style.overflow = '';
+        }, 300);
+      }
+    }
+
+    function openMemberPanel(memberId) {
+      const member = mockMembers.find(m => m.id === memberId);
+      if (!member) return;
+      
+      const panel = document.getElementById('memberPanel');
+      const content = document.getElementById('memberPanelContent');
+      
+      if (content) {
+        const balanceText = member.isOwed 
+          ? `Owed ${mockGroup.symbol}${member.balance}`
+          : `Owes ${mockGroup.symbol}${Math.abs(member.balance)}`;
+        const balanceClass = member.isOwed ? 'text-positive' : 'text-negative';
+        
+        content.innerHTML = `
+          <div class="text-center mb-6">
+            <div class="w-16 h-16 mx-auto rounded-full bg-${member.color === 'accent' ? 'accent/10' : member.color + '-100'} flex items-center justify-center text-xl font-semibold text-${member.color === 'accent' ? 'accent' : member.color + '-600'} mb-3">
+              ${member.initials}
+            </div>
+            <h3 class="text-lg font-semibold text-fg">${member.name}</h3>
+            <p class="${balanceClass} font-medium">${balanceText}</p>
+          </div>
+          
+          <div class="space-y-3 mb-6">
+            <div class="flex items-center justify-between p-3 bg-neutral-50 rounded-xl">
+              <span class="text-sm text-muted">Total paid</span>
+              <span class="font-medium text-fg">${mockGroup.symbol}${member.totalPaid}</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-neutral-50 rounded-xl">
+              <span class="text-sm text-muted">Total owed</span>
+              <span class="font-medium text-fg">${mockGroup.symbol}${member.totalOwed}</span>
+            </div>
+            ${member.income ? `
+            <div class="flex items-center justify-between p-3 bg-neutral-50 rounded-xl">
+              <span class="text-sm text-muted">Monthly income</span>
+              <span class="font-medium text-fg">${mockGroup.symbol}${member.income.toLocaleString()}</span>
+            </div>
+            ` : ''}
+          </div>
+          
+          ${member.isYou ? `
+          <button onclick="editIncome()" class="w-full py-2.5 bg-neutral-50 hover:bg-neutral-100 text-fg font-medium rounded-xl transition-colors">
+            Edit Income
+          </button>
+          ` : ''}
+        `;
+      }
+      
+      if (panel) panel.classList.add('open');
+    }
+
+    function closeMemberPanel() {
+      const panel = document.getElementById('memberPanel');
+      if (panel) panel.classList.remove('open');
+    }
+
+    // =========================================
+    // Form Handlers
+    // =========================================
+    function setSplitMethod(method, btn) {
+      splitMethod = method;
+      document.querySelectorAll('.split-btn').forEach(b => {
+        b.classList.remove('active', 'bg-accent', 'text-white');
+        b.classList.add('bg-neutral-50', 'text-fg');
+      });
+      btn.classList.remove('bg-neutral-50', 'text-fg');
+      btn.classList.add('active', 'bg-accent', 'text-white');
+    }
+
+    function copyInviteLink() {
+      const link = document.getElementById('inviteLink')?.textContent;
+      if (link) {
+        navigator.clipboard.writeText(link);
+        const success = document.getElementById('copySuccess');
+        if (success) {
+          success.classList.remove('hidden');
+          setTimeout(() => success.classList.add('hidden'), 2000);
+        }
+      }
+    }
+
+    document.getElementById('expenseForm')?.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      // Handle expense submission
+      closeExpenseModal();
+    });
+
+    // =========================================
+    // Actions
+    // =========================================
+    function editGroup() {
+      // Open edit modal
+      console.log('Edit group');
+    }
+
+    function leaveGroup() {
+      if (confirm('Are you sure you want to leave this group?')) {
+        window.location.href = 'dashboard.html';
+      }
+    }
+
+    function openSettleModal() {
+      // Redirect to PayPal
+      console.log('Opening PayPal checkout...');
+    }
+
+    function sendReminders() {
+      alert('Reminders sent!');
+    }
+
+    function openExpenseDetail(id) {
+      // Open expense detail modal
+      console.log('Opening expense:', id);
+    }
+
+    function editIncome() {
+      // Open income edit
+      console.log('Edit income');
+    }
+
+    function logout() {
+      localStorage.removeItem('fairshare_user_session');
+      window.location.href = 'auth.html';
+    }
+
+    // =========================================
+    // Event Listeners
+    // =========================================
+    document.addEventListener('click', (e) => {
+      const groupDropdown = document.getElementById('groupDropdown');
+      const userMenu = document.getElementById('userMenu');
+      const groupMenu = document.getElementById('groupMenu');
+      
+      if (groupDropdown && !e.target.closest('[onclick="toggleGroupDropdown()"]') && !e.target.closest('#groupDropdown')) {
+        groupDropdown.classList.remove('open');
+      }
+      
+      if (userMenu && !e.target.closest('[onclick="toggleUserMenu()"]') && !e.target.closest('#userMenu')) {
+        userMenu.classList.remove('open');
+      }
+      
+      if (groupMenu && !e.target.closest('[onclick="toggleGroupMenu()"]') && !e.target.closest('#groupMenu')) {
+        groupMenu.classList.remove('open');
+      }
+    });
+
+    document.getElementById('drawerOverlay')?.addEventListener('click', (e) => {
+      if (e.target.id === 'drawerOverlay') toggleDrawer();
+    });
+
+    document.getElementById('expenseModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'expenseModal') closeExpenseModal();
+    });
+
+    document.getElementById('inviteModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'inviteModal') closeInviteModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeExpenseModal();
+        closeInviteModal();
+        closeMemberPanel();
+        const overlay = document.getElementById('drawerOverlay');
+        if (overlay?.classList.contains('open')) toggleDrawer();
+      }
+    });
+
+    // =========================================
+    // Initialization
+    // =========================================
+    async function initGroup() {
+      if (!checkAuth()) return;
+      
+      // Simulate loading
+      await new Promise(resolve => setTimeout(resolve, 600));
+      
+      // Hide loading
+      const loadingState = document.getElementById('loadingState');
+      if (loadingState) loadingState.classList.add('hidden');
+      
+      // Show content
+      const groupContent = document.getElementById('groupContent');
+      if (groupContent) groupContent.classList.remove('hidden');
+      
+      // Render all components
+      renderNavigation();
+      renderGroupDropdown();
+      renderMembers();
+      renderExpenses();
+      renderRecurring();
+      renderGoals();
+    }
+
+    document.addEventListener('DOMContentLoaded', initGroup);
+  </script>
+</body>
+</html>

@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join Group | FairShare Hub</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#f8f7f4">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: '#f8f7f4',
+            fg: '#1a1a1a',
+            muted: '#6b6b6b',
+            accent: '#2e7d32',
+            'accent-light': '#4a9f4e',
+            'accent-soft': '#e8f5e9',
+            card: '#ffffff',
+            border: '#e5e5e5',
+            'error': '#c62828',
+            'error-soft': '#fef2f2',
+            'warning': '#b45309',
+            'warning-soft': '#fffbeb',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            'soft': '0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)',
+            'soft-lg': '0 8px 40px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: #f8f7f4;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+
+    /* Focus styles */
+    button:focus-visible,
+    input:focus-visible {
+      outline: 2px solid #2e7d32;
+      outline-offset: 2px;
+    }
+
+    /* Button loading */
+    .btn-loading {
+      position: relative;
+      color: transparent !important;
+      pointer-events: none;
+    }
+
+    .btn-loading::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      top: 50%;
+      left: 50%;
+      margin-left: -10px;
+      margin-top: -10px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Modal */
+    .modal-overlay {
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-content {
+      transform: scale(0.95) translateY(10px);
+      transition: transform 0.25s ease;
+    }
+
+    .modal-overlay.open .modal-content {
+      transform: scale(1) translateY(0);
+    }
+
+    /* State transitions */
+    .state-view {
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      display: none;
+    }
+
+    .state-view.active {
+      opacity: 1;
+      transform: translateY(0);
+      display: block;
+    }
+
+    /* Success animation */
+    .success-icon {
+      animation: scaleIn 0.4s ease forwards;
+    }
+
+    @keyframes scaleIn {
+      from {
+        transform: scale(0);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .success-check {
+      stroke-dasharray: 24;
+      stroke-dashoffset: 24;
+      animation: drawCheck 0.4s ease 0.2s forwards;
+    }
+
+    @keyframes drawCheck {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    /* Entrance animations */
+    @media (prefers-reduced-motion: no-preference) {
+      .animate-entrance {
+        animation: fadeUp 0.5s ease forwards;
+      }
+
+      .animate-entrance-delay {
+        opacity: 0;
+        animation: fadeUp 0.5s ease 0.1s forwards;
+      }
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Avatar stack */
+    .avatar-stack .avatar {
+      margin-left: -8px;
+      transition: transform 0.2s ease;
+    }
+
+    .avatar-stack .avatar:first-child {
+      margin-left: 0;
+    }
+
+    .avatar-stack:hover .avatar {
+      transform: translateX(4px);
+    }
+
+    .avatar-stack:hover .avatar:first-child {
+      transform: translateX(0);
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Input styling */
+    .income-input {
+      width: 100%;
+      padding: 0.875rem 1rem 0.875rem 2.5rem;
+      font-size: 1rem;
+      border: 1px solid #e5e5e5;
+      border-radius: 0.75rem;
+      background: #fafafa;
+      transition: all 0.2s ease;
+    }
+
+    .income-input:focus {
+      border-color: #2e7d32;
+      background: #ffffff;
+      outline: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+  
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col items-center justify-center px-4 py-8 sm:py-12">
+    
+    <!-- Invite Card -->
+    <div class="animate-entrance w-full max-w-md">
+      <div class="bg-card rounded-2xl sm:rounded-3xl shadow-soft-lg p-6 sm:p-10">
+        
+        <!-- Logo -->
+        <a href="landing.html" class="block text-center mb-8" aria-label="FairShare Hub Home">
+          <div class="inline-flex items-center gap-2">
+            <div class="w-9 h-9 rounded-xl bg-accent flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <span class="text-lg font-semibold text-fg tracking-tight">FairShare Hub</span>
+          </div>
+        </a>
+
+        <!-- LOADING STATE -->
+        <div id="loadingState" class="state-view active">
+          <div class="flex flex-col items-center py-8">
+            <div class="w-10 h-10 border-2 border-accent/30 border-t-accent rounded-full animate-spin mb-4"></div>
+            <p class="text-muted">Verifying invite...</p>
+          </div>
+        </div>
+
+        <!-- ERROR STATE: Invalid Invite -->
+        <div id="invalidState" class="state-view">
+          <div class="text-center py-4">
+            <div class="w-16 h-16 mx-auto mb-6 rounded-2xl bg-error-soft flex items-center justify-center">
+              <svg class="w-8 h-8 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+            </div>
+            <h1 class="text-xl font-semibold text-fg mb-2">Invalid Invite Link</h1>
+            <p class="text-muted mb-6">This invite link is invalid or has expired.</p>
+            <a href="dashboard.html" class="inline-block w-full bg-accent hover:bg-accent-light text-white font-medium py-3.5 px-6 rounded-xl transition-all duration-200 hover:shadow-lg active:scale-[0.99]">
+              Go to Dashboard
+            </a>
+          </div>
+        </div>
+
+        <!-- ERROR STATE: Already Member -->
+        <div id="alreadyMemberState" class="state-view">
+          <div class="text-center py-4">
+            <div class="w-16 h-16 mx-auto mb-6 rounded-2xl bg-accent-soft flex items-center justify-center">
+              <svg class="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <h1 class="text-xl font-semibold text-fg mb-2">You're Already a Member</h1>
+            <p class="text-muted mb-6">You're already part of <span id="alreadyMemberGroupName" class="font-medium text-fg">this group</span>.</p>
+            <a id="openGroupBtn" href="#" class="inline-block w-full bg-accent hover:bg-accent-light text-white font-medium py-3.5 px-6 rounded-xl transition-all duration-200 hover:shadow-lg active:scale-[0.99]">
+              Open Group
+            </a>
+          </div>
+        </div>
+
+        <!-- ERROR STATE: Group Full -->
+        <div id="groupFullState" class="state-view">
+          <div class="text-center py-4">
+            <div class="w-16 h-16 mx-auto mb-6 rounded-2xl bg-warning-soft flex items-center justify-center">
+              <svg class="w-8 h-8 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <h1 class="text-xl font-semibold text-fg mb-2">Group is Full</h1>
+            <p class="text-muted mb-6">This group has reached its member limit.</p>
+            <a href="dashboard.html" class="inline-block w-full bg-accent hover:bg-accent-light text-white font-medium py-3.5 px-6 rounded-xl transition-all duration-200 hover:shadow-lg active:scale-[0.99]">
+              Go to Dashboard
+            </a>
+          </div>
+        </div>
+
+        <!-- SUCCESS STATE -->
+        <div id="successState" class="state-view">
+          <div class="text-center py-4">
+            <div class="success-icon w-16 h-16 mx-auto mb-6 rounded-2xl bg-accent-soft flex items-center justify-center">
+              <svg class="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path class="success-check" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <h1 class="text-xl font-semibold text-fg mb-2">You've Joined the Group</h1>
+            <p class="text-muted">Redirecting you now...</p>
+          </div>
+        </div>
+
+        <!-- ERROR STATE: Generic Error -->
+        <div id="errorState" class="state-view">
+          <div class="text-center py-4">
+            <div class="w-16 h-16 mx-auto mb-6 rounded-2xl bg-error-soft flex items-center justify-center">
+              <svg class="w-8 h-8 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <h1 class="text-xl font-semibold text-fg mb-2">Something Went Wrong</h1>
+            <p class="text-muted mb-6">We couldn't process your request. Please try again.</p>
+            <button onclick="location.reload()" class="w-full bg-accent hover:bg-accent-light text-white font-medium py-3.5 px-6 rounded-xl transition-all duration-200 hover:shadow-lg active:scale-[0.99]">
+              Try Again
+            </button>
+          </div>
+        </div>
+
+        <!-- MAIN INVITE STATE -->
+        <div id="inviteState" class="state-view">
+          <!-- Group Preview Card -->
+          <div class="bg-neutral-50 rounded-xl p-4 mb-6">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h2 id="previewGroupName" class="text-lg font-semibold text-fg truncate">Apartment 4B</h2>
+                <div class="flex items-center gap-3 text-sm text-muted mt-0.5">
+                  <span id="previewMemberCount">3 members</span>
+                  <span class="w-1 h-1 rounded-full bg-border"></span>
+                  <span id="previewCurrency">USD</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Member Avatars Preview -->
+            <div id="avatarPreview" class="mt-4 pt-4 border-t border-border">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-muted">Current members</span>
+                <div class="avatar-stack flex">
+                  <div class="avatar w-8 h-8 rounded-full bg-accent/20 border-2 border-white flex items-center justify-center text-xs font-medium text-accent">JD</div>
+                  <div class="avatar w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-xs font-medium text-blue-600">SK</div>
+                  <div class="avatar w-8 h-8 rounded-full bg-purple-100 border-2 border-white flex items-center justify-center text-xs font-medium text-purple-600">ML</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Message -->
+          <div class="text-center mb-8">
+            <h1 class="text-2xl sm:text-3xl font-semibold text-fg mb-3">
+              You've been invited to join
+            </h1>
+            <p class="text-xl text-accent font-medium mb-3" id="groupNameHighlight">Apartment 4B</p>
+            <p class="text-muted">Track shared expenses and stay balanced together.</p>
+          </div>
+
+          <!-- Actions -->
+          <div class="space-y-3">
+            <button id="acceptBtn" onclick="handleAccept()" class="w-full bg-accent hover:bg-accent-light text-white font-medium py-3.5 px-6 rounded-xl transition-all duration-200 hover:shadow-lg active:scale-[0.99]">
+              Accept & Join
+            </button>
+            <button onclick="handleDecline()" class="w-full bg-transparent text-muted hover:text-fg font-medium py-3 px-6 rounded-xl transition-colors border border-transparent hover:border-border">
+              Decline
+            </button>
+          </div>
+
+          <!-- Error Message -->
+          <div id="acceptError" class="hidden mt-4 p-3 bg-error-soft rounded-xl text-center">
+            <p class="text-error text-sm">Something went wrong. Please try again.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Trust Section -->
+      <div class="animate-entrance-delay mt-6 text-center">
+        <div class="flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm text-muted">
+          <span class="flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+            Invite links are secure
+          </span>
+          <span class="flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            Leave anytime in settings
+          </span>
+        </div>
+        <p class="text-sm text-muted mt-2">FairShare never stores PayPal funds</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Income Modal -->
+  <div id="incomeModal" class="modal-overlay fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="modal-content bg-card rounded-2xl shadow-soft-lg w-full max-w-sm p-6">
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 mx-auto mb-4 rounded-xl bg-accent-soft flex items-center justify-center">
+          <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <h2 class="text-xl font-semibold text-fg mb-2">Add Your Income?</h2>
+        <p class="text-muted text-sm">This helps calculate fair, proportional splits with your group.</p>
+      </div>
+
+      <div class="mb-4">
+        <div class="relative">
+          <span id="modalCurrencySymbol" class="absolute left-4 top-1/2 -translate-y-1/2 text-muted font-medium">$</span>
+          <input type="text" id="modalIncomeInput" class="income-input" placeholder="Monthly income" inputmode="decimal" aria-label="Monthly income">
+        </div>
+        <p class="text-xs text-muted mt-2 ml-1">Only visible to you, used for split calculations.</p>
+      </div>
+
+      <div class="space-y-3">
+        <button id="saveIncomeBtn" onclick="saveIncomeAndContinue()" class="w-full bg-accent hover:bg-accent-light text-white font-medium py-3 px-6 rounded-xl transition-all duration-200 hover:shadow-lg active:scale-[0.99]">
+          Save & Continue
+        </button>
+        <button onclick="skipIncomeAndContinue()" class="w-full bg-transparent text-muted hover:text-fg font-medium py-3 px-6 rounded-xl transition-colors">
+          Skip for now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================
+    // State & Configuration
+    // =========================================
+    let inviteToken = null;
+    let groupId = null;
+    let groupData = null;
+    let isLoggedIn = false; // Replace with actual auth check
+    let userHasIncome = true; // Replace with actual user data check
+    let isNewUser = false; // Replace with actual check
+
+    // Mock group data (replace with Supabase fetch)
+    const mockGroupData = {
+      id: 'grp_abc123',
+      name: 'Apartment 4B',
+      memberCount: 3,
+      currency: 'USD',
+      currencySymbol: '$',
+      members: [
+        { initials: 'JD', color: 'accent' },
+        { initials: 'SK', color: 'blue' },
+        { initials: 'ML', color: 'purple' }
+      ],
+      isFull: false,
+      isValid: true
+    };
+
+    // =========================================
+    // State Management
+    // =========================================
+    function showState(stateId) {
+      const views = document.querySelectorAll('.state-view');
+      views.forEach(view => {
+        view.classList.remove('active');
+      });
+      
+      const targetView = document.getElementById(stateId);
+      if (targetView) {
+        targetView.classList.add('active');
+      }
+    }
+
+    function showModal(modalId, show) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        if (show) {
+          modal.classList.add('open');
+        } else {
+          modal.classList.remove('open');
+        }
+      }
+    }
+
+    // =========================================
+    // URL Parameter Handling
+    // =========================================
+    function parseURLParams() {
+      const params = new URLSearchParams(window.location.search);
+      inviteToken = params.get('token');
+      groupId = params.get('group');
+      
+      if (!inviteToken && !groupId) {
+        showState('invalidState');
+        return false;
+      }
+      return true;
+    }
+
+    // =========================================
+    // Invite Validation
+    // =========================================
+    async function validateInvite() {
+      showState('loadingState');
+      
+      // Simulate API call (replace with Supabase)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Check if user is logged in
+      const userSession = localStorage.getItem('fairshare_user_session');
+      if (!userSession) {
+        isLoggedIn = false;
+        redirectToAuth();
+        return;
+      }
+      
+      isLoggedIn = true;
+      
+      // Mock validation (replace with actual token validation)
+      const isValid = Math.random() > 0.1; // 90% success rate for demo
+      
+      if (!isValid) {
+        showState('invalidState');
+        return;
+      }
+      
+      // Use mock data
+      groupData = mockGroupData;
+      
+      // Check various states
+      const isAlreadyMember = localStorage.getItem('fairshare_member_' + groupData.id);
+      if (isAlreadyMember) {
+        document.getElementById('alreadyMemberGroupName').textContent = groupData.name;
+        document.getElementById('openGroupBtn').href = `group.html?id=${groupData.id}`;
+        showState('alreadyMemberState');
+        return;
+      }
+      
+      if (groupData.isFull) {
+        showState('groupFullState');
+        return;
+      }
+      
+      // Check user income status (mock)
+      userHasIncome = localStorage.getItem('fairshare_user_income') !== null;
+      isNewUser = localStorage.getItem('fairshare_new_user') === 'true';
+      
+      // Show invite
+      updateGroupPreview();
+      showState('inviteState');
+    }
+
+    function redirectToAuth() {
+      const currentUrl = window.location.href;
+      const authUrl = `auth.html?redirect=${encodeURIComponent(currentUrl)}`;
+      if (inviteToken) {
+        window.location.href = `auth.html?invite=${encodeURIComponent(inviteToken)}&redirect=${encodeURIComponent(currentUrl)}`;
+      } else if (groupId) {
+        window.location.href = `auth.html?invite=${encodeURIComponent(groupId)}&redirect=${encodeURIComponent(currentUrl)}`;
+      } else {
+        window.location.href = authUrl;
+      }
+    }
+
+    // =========================================
+    // Group Preview Update
+    // =========================================
+    function updateGroupPreview() {
+      if (!groupData) return;
+      
+      document.getElementById('previewGroupName').textContent = groupData.name;
+      document.getElementById('groupNameHighlight').textContent = groupData.name;
+      document.getElementById('previewMemberCount').textContent = `${groupData.memberCount} member${groupData.memberCount !== 1 ? 's' : ''}`;
+      document.getElementById('previewCurrency').textContent = groupData.currency;
+      document.getElementById('modalCurrencySymbol').textContent = groupData.currencySymbol;
+      
+      // Update avatars
+      const avatarPreview = document.getElementById('avatarPreview');
+      if (avatarPreview && groupData.members) {
+        const avatarStack = avatarPreview.querySelector('.avatar-stack');
+        if (avatarStack) {
+          avatarStack.innerHTML = groupData.members.map(member => {
+            const colorClasses = {
+              accent: 'bg-accent/20 text-accent',
+              blue: 'bg-blue-100 text-blue-600',
+              purple: 'bg-purple-100 text-purple-600',
+              green: 'bg-green-100 text-green-600',
+              orange: 'bg-orange-100 text-orange-600'
+            };
+            return `<div class="avatar w-8 h-8 rounded-full ${colorClasses[member.color] || colorClasses.accent} border-2 border-white flex items-center justify-center text-xs font-medium">${member.initials}</div>`;
+          }).join('');
+        }
+      }
+    }
+
+    // =========================================
+    // Accept & Decline Handlers
+    // =========================================
+    async function handleAccept() {
+      const btn = document.getElementById('acceptBtn');
+      const errorEl = document.getElementById('acceptError');
+      
+      errorEl.classList.add('hidden');
+      
+      // Show loading
+      btn.classList.add('btn-loading');
+      btn.disabled = true;
+      
+      try {
+        // Simulate API call (replace with Supabase)
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Mark as member
+        localStorage.setItem('fairshare_member_' + groupData.id, 'true');
+        
+        // Show success
+        showState('successState');
+        
+        // Check if user needs income setup
+        if (!userHasIncome) {
+          setTimeout(() => {
+            showModal('incomeModal', true);
+          }, 500);
+          return;
+        }
+        
+        // Check if new user needs onboarding
+        if (isNewUser) {
+          setTimeout(() => {
+            window.location.href = `onboarding.html?joined=${groupData.id}`;
+          }, 1500);
+          return;
+        }
+        
+        // Redirect to group
+        setTimeout(() => {
+          window.location.href = `group.html?id=${groupData.id}`;
+        }, 1500);
+        
+      } catch (error) {
+        btn.classList.remove('btn-loading');
+        btn.disabled = false;
+        errorEl.classList.remove('hidden');
+      }
+    }
+
+    function handleDecline() {
+      window.location.href = 'dashboard.html';
+    }
+
+    // =========================================
+    // Income Modal Handlers
+    // =========================================
+    function initIncomeInput() {
+      const input = document.getElementById('modalIncomeInput');
+      if (!input) return;
+      
+      input.addEventListener('input', (e) => {
+        let value = e.target.value.replace(/[^0-9.]/g, '');
+        const parts = value.split('.');
+        if (parts.length > 2) {
+          value = parts[0] + '.' + parts.slice(1).join('');
+        }
+        if (parts[1] && parts[1].length > 2) {
+          value = parts[0] + '.' + parts[1].slice(0, 2);
+        }
+        e.target.value = value;
+      });
+    }
+
+    async function saveIncomeAndContinue() {
+      const input = document.getElementById('modalIncomeInput');
+      const btn = document.getElementById('saveIncomeBtn');
+      const income = input.value.replace(/[^0-9.]/g, '');
+      
+      if (!income || parseFloat(income) <= 0) {
+        input.style.borderColor = '#c62828';
+        setTimeout(() => {
+          input.style.borderColor = '';
+        }, 2000);
+        return;
+      }
+      
+      btn.classList.add('btn-loading');
+      btn.disabled = true;
+      
+      // Save income (replace with Supabase)
+      await new Promise(resolve => setTimeout(resolve, 800));
+      localStorage.setItem('fairshare_user_income', income);
+      
+      showModal('incomeModal', false);
+      
+      // Redirect
+      if (isNewUser) {
+        window.location.href = `onboarding.html?joined=${groupData.id}`;
+      } else {
+        window.location.href = `group.html?id=${groupData.id}`;
+      }
+    }
+
+    function skipIncomeAndContinue() {
+      showModal('incomeModal', false);
+      
+      // Redirect
+      if (isNewUser) {
+        window.location.href = `onboarding.html?joined=${groupData.id}`;
+      } else {
+        window.location.href = `group.html?id=${groupData.id}`;
+      }
+    }
+
+    // =========================================
+    // Initialization
+    // =========================================
+    document.addEventListener('DOMContentLoaded', function() {
+      initIncomeInput();
+      
+      // Parse URL and validate
+      if (parseURLParams()) {
+        validateInvite();
+      }
+      
+      // Close modal on backdrop click
+      const modal = document.getElementById('incomeModal');
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            // Don't close on backdrop click for income modal
+            // User must choose an option
+          }
+        });
+      }
+      
+      // Keyboard handling
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          // Don't allow escape on income modal
+        }
+      });
+    });
+  </script>
+</body>
+</html>

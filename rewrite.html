@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rewrite Your Reply — Stop Chasing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bg: '#08080c',
+                        card: '#0e0e14',
+                        border: '#1a1a28',
+                        borderFocus: '#2a2a3f',
+                        muted: '#5a5a70',
+                        accent: '#c9a87c',
+                        accentHover: '#dbb98d',
+                        success: '#5cb88f',
+                    },
+                    fontFamily: {
+                        display: ['Syne', 'sans-serif'],
+                        body: ['DM Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* (styles unchanged) */
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #08080c;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        .app-gradient {
+            background: 
+                radial-gradient(ellipse 60% 40% at 50% 0%, rgba(201, 168, 124, 0.05) 0%, transparent 60%),
+                #08080c;
+        }
+        .card-glow {
+            box-shadow: 0 0 0 1px rgba(201, 168, 124, 0.05), 0 20px 50px -20px rgba(0, 0, 0, 0.5);
+        }
+        .input-field {
+            background: #0a0a10;
+            border: 1px solid #1a1a28;
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            border-color: #c9a87c;
+            box-shadow: 0 0 0 3px rgba(201, 168, 124, 0.1);
+            outline: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #c9a87c 0%, #b8976b 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 30px -10px rgba(201, 168, 124, 0.4);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .progress-bar-bg {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .progress-bar-fill {
+            background: linear-gradient(90deg, #c9a87c, #dbb98d);
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dropdown-menu {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.2s ease;
+        }
+        .dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="app-gradient">
+    <!-- Top Navigation (unchanged) -->
+    <nav class="sticky top-0 z-50 bg-bg/90 backdrop-blur-xl border-b border-border">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <a href="dashboard.html" class="font-display font-bold text-xl text-white hover:text-accent transition-colors">
+                    Stop Chasing
+                </a>
+                <div class="flex items-center gap-3 sm:gap-4">
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-border text-sm">
+                        <span id="credits-display" class="font-semibold text-accent">—</span>
+                        <span class="text-muted hidden sm:inline">Credits</span>
+                    </div>
+                    <button onclick="window.location.href='#upgrade'" class="btn-primary px-4 py-2 rounded-full text-sm font-semibold text-bg focus-ring">
+                        Upgrade
+                    </button>
+                    <div class="relative">
+                        <button id="profile-btn" class="w-9 h-9 rounded-full bg-gradient-to-br from-accent/30 to-accent/10 flex items-center justify-center border border-border hover:border-accent/30 transition-colors focus-ring" aria-label="Profile menu">
+                            <span id="profile-initials" class="font-semibold text-accent text-xs">—</span>
+                        </button>
+                        <div id="profile-dropdown" class="dropdown-menu absolute right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-2xl py-2">
+                            <div class="px-4 py-2 text-xs text-muted border-b border-border mb-1">
+                                <span id="dropdown-email" class="block text-white/80 text-sm truncate"></span>
+                            </div>
+                            <a href="dashboard.html" class="block px-4 py-2 text-sm text-white/80 hover:bg-white/5 transition-colors">Dashboard</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-white/80 hover:bg-white/5 transition-colors">Settings</a>
+                            <div class="border-t border-border my-1"></div>
+                            <button id="sign-out-btn" class="w-full text-left px-4 py-2 text-sm text-muted hover:text-white hover:bg-white/5 transition-colors">Sign Out</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <!-- Back Button -->
+        <div class="mb-8">
+            <a href="dashboard.html" class="inline-flex items-center gap-2 text-muted hover:text-white transition-colors text-sm font-medium group">
+                <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="font-display font-bold text-3xl sm:text-4xl text-white mb-3">
+                Rewrite Your Reply
+            </h1>
+            <p class="text-muted text-lg">
+                Turn hesitation into confidence.
+            </p>
+        </div>
+
+        <!-- Input Card -->
+        <div class="bg-card border border-border rounded-2xl p-6 sm:p-8 card-glow mb-6">
+            <form id="rewrite-form">
+                
+                <!-- Message Input -->
+                <div class="mb-6">
+                    <label for="message-input" class="block text-sm font-medium text-white/80 mb-2">
+                        Your Message
+                    </label>
+                    <textarea 
+                        id="message-input" 
+                        rows="5" 
+                        class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-muted resize-none focus-ring"
+                        placeholder="Paste the message you're thinking of sending..."
+                        required
+                    ></textarea>
+                </div>
+
+                <!-- Intent Selector -->
+                <div class="mb-6">
+                    <label for="intent-select" class="block text-sm font-medium text-white/80 mb-2">
+                        Choose Your Intent
+                    </label>
+                    <div class="relative">
+                        <select id="intent-select" class="input-field w-full px-4 py-3 rounded-xl text-white appearance-none cursor-pointer focus-ring">
+                            <option value="flirt">Flirt confidently</option>
+                            <option value="stop_chasing">Stop chasing</option>
+                            <option value="mysterious">Sound mysterious</option>
+                            <option value="pull_back">Pull back slightly</option>
+                            <option value="boundary">Set a boundary</option>
+                            <option value="playful">Be playful dominant</option>
+                            <option value="reengage">Re-engage casually</option>
+                        </select>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Context (Optional) -->
+                <div class="mb-8">
+                    <label for="context-input" class="block text-sm font-medium text-white/50 mb-2">
+                        Context (Optional)
+                    </label>
+                    <input 
+                        type="text" 
+                        id="context-input" 
+                        class="input-field w-full px-4 py-2.5 rounded-xl text-white placeholder-muted text-sm focus-ring"
+                        placeholder="e.g., We haven't spoken in 3 days..."
+                    >
+                </div>
+
+                <!-- Action Area -->
+                <div id="action-area">
+                    <!-- Default Action (Has Credits) -->
+                    <div id="has-credits-ui">
+                        <button type="submit" id="rewrite-btn" class="btn-primary w-full py-4 rounded-xl font-semibold text-bg text-base focus-ring flex items-center justify-center gap-2">
+                            <span>Rewrite Message</span>
+                            <span class="bg-bg/20 text-xs px-2 py-0.5 rounded-full font-bold">1 Credit</span>
+                        </button>
+                        <p class="text-center text-muted text-xs mt-3">
+                            This action uses 1 credit.
+                        </p>
+                    </div>
+
+                    <!-- No Credits State -->
+                    <div id="no-credits-ui" class="hidden text-center">
+                        <div class="bg-danger/10 border border-danger/20 text-danger rounded-xl p-4 mb-4">
+                            You've used all your credits this month.
+                        </div>
+                        <button type="button" class="btn-primary w-full py-4 rounded-xl font-semibold text-bg text-base focus-ring">
+                            Upgrade to Continue
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Result Card (Hidden Initially) -->
+        <div id="result-card" class="hidden">
+            <div class="bg-card border border-border rounded-2xl p-6 sm:p-8 card-glow fade-in">
+                
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="font-display font-bold text-xl text-white">Your Optimized Reply</h2>
+                    <button id="copy-btn" class="text-sm text-accent hover:text-accentHover flex items-center gap-1.5 transition-colors focus-ring rounded px-2 py-1">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        Copy
+                    </button>
+                </div>
+
+                <!-- Result Text -->
+                <div class="bg-bg border border-border rounded-xl p-5 mb-8">
+                    <p id="result-text" class="text-white text-lg leading-relaxed whitespace-pre-wrap">
+                        <!-- Rewritten text goes here -->
+                    </p>
+                </div>
+
+                <!-- Confidence Score -->
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-white/70">Confidence Score</span>
+                        <span id="score-value" class="font-bold text-accent text-lg">—</span>
+                    </div>
+                    <div class="progress-bar-bg h-2 rounded-full overflow-hidden">
+                        <div id="score-bar" class="progress-bar-fill h-full rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Why It Works -->
+                <div class="border-t border-border pt-6 mb-8">
+                    <h3 class="text-sm font-semibold text-white/50 uppercase tracking-wide mb-3">Why this works</h3>
+                    <p id="explanation-text" class="text-muted leading-relaxed">
+                        <!-- Explanation goes here -->
+                    </p>
+                </div>
+
+                <!-- Transformation Stats -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-bg rounded-xl p-4 text-center border border-border">
+                        <p class="text-xs text-muted uppercase tracking-wide mb-1">Before</p>
+                        <p id="before-score" class="font-display font-bold text-2xl text-white/50">—</p>
+                    </div>
+                    <div class="bg-accent/10 rounded-xl p-4 text-center border border-accent/20">
+                        <p class="text-xs text-accent uppercase tracking-wide mb-1">After</p>
+                        <p id="after-score" class="font-display font-bold text-2xl text-accent">—</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // ==================== SUPABASE INIT ====================
+        const SUPABASE_URL = 'https://rwcwuugxlfjqxnkwdavt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3Y3d1dWd4bGZqcXhua3dkYXZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2ODMzMzMsImV4cCI6MjA4NjI1OTMzM30.ZscCHxYa2LWw60yB2XKhbo9b8Qs3iZKeJZYhIzPUifw';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let userProfile = null;
+
+        // ==================== AUTH & INIT ====================
+        async function initPage() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            // Fetch profile
+            const { data: profile } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+
+            userProfile = profile || { credits: 5, username: session.user.email.split('@')[0] };
+            updateUI();
+        }
+
+        function updateUI() {
+            // Credits
+            const credits = userProfile.credits ?? 5;
+            document.getElementById('credits-display').textContent = credits;
+
+            // Profile
+            supabaseClient.auth.getUser().then(({ data }) => {
+                if(data.user) {
+                    document.getElementById('dropdown-email').textContent = data.user.email;
+                    document.getElementById('profile-initials').textContent = data.user.email.substring(0, 2).toUpperCase();
+                }
+            });
+
+            // Toggle Credit State
+            if (credits <= 0) {
+                document.getElementById('has-credits-ui').classList.add('hidden');
+                document.getElementById('no-credits-ui').classList.remove('hidden');
+            } else {
+                document.getElementById('has-credits-ui').classList.remove('hidden');
+                document.getElementById('no-credits-ui').classList.add('hidden');
+            }
+        }
+
+        // ==================== PROFILE DROPDOWN ====================
+        const profileBtn = document.getElementById('profile-btn');
+        const profileDropdown = document.getElementById('profile-dropdown');
+
+        profileBtn.addEventListener('click', () => {
+            profileDropdown.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!profileDropdown.contains(e.target) && !profileBtn.contains(e.target)) {
+                profileDropdown.classList.remove('active');
+            }
+        });
+
+        document.getElementById('sign-out-btn').addEventListener('click', async () => {
+            await supabaseClient.auth.signOut();
+            window.location.href = 'auth.html';
+        });
+
+        // ==================== EDGE FUNCTION CALL ====================
+        async function callRewriteEdgeFunction(message, intent, context) {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) throw new Error('No active session');
+
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/rewrite`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({
+                    message,
+                    intent,
+                    context: context || undefined
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Edge function error (${response.status}): ${errorText}`);
+            }
+
+            return await response.json();
+        }
+
+        // ==================== REWRITE LOGIC ====================
+        document.getElementById('rewrite-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('rewrite-btn');
+            const inputText = document.getElementById('message-input').value;
+            const intent = document.getElementById('intent-select').value;
+            const context = document.getElementById('context-input').value;
+            
+            if (!inputText.trim()) return;
+
+            // Loading State
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="animate-spin h-5 w-5 text-bg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+
+            try {
+                // Get current user
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) throw new Error('Not authenticated');
+
+                // Call the actual edge function
+                const result = await callRewriteEdgeFunction(inputText, intent, context);
+                
+                // Expected result shape: { rewritten, explanation, score, beforeScore }
+                // If your edge function returns different keys, adjust here
+                const { rewritten, explanation, score, beforeScore } = result;
+
+                // Deduct Credit (only after successful generation)
+                userProfile.credits = Math.max(0, userProfile.credits - 1);
+                
+                // Update credits in database
+                await supabaseClient
+                    .from('profiles')
+                    .update({ credits: userProfile.credits })
+                    .eq('id', user.id);
+
+                // Save rewrite to database
+                const { error: insertError } = await supabaseClient
+                    .from('rewrites')
+                    .insert({
+                        user_id: user.id,
+                        original_message: inputText,
+                        intent: intent,
+                        context: context || null,
+                        rewritten_message: rewritten,
+                        explanation: explanation,
+                        confidence_score: score,
+                        before_score: beforeScore,
+                        credits_used: 1,
+                        result_data: result  // store full result JSON
+                    });
+
+                if (insertError) {
+                    console.error('Failed to save rewrite:', insertError);
+                    // Still show the result, but maybe show a warning
+                }
+
+                // Display Result
+                displayResult({ rewritten, explanation, score, beforeScore });
+                
+            } catch (error) {
+                console.error('Rewrite error:', error);
+                alert('Something went wrong. Please try again.');
+            } finally {
+                // Reset Button
+                btn.disabled = false;
+                btn.innerHTML = '<span>Rewrite Message</span><span class="bg-bg/20 text-xs px-2 py-0.5 rounded-full font-bold">1 Credit</span>';
+                updateUI();
+            }
+        });
+
+        function displayResult(data) {
+            document.getElementById('result-card').classList.remove('hidden');
+            document.getElementById('result-text').textContent = data.rewritten;
+            document.getElementById('explanation-text').textContent = data.explanation;
+            
+            // Animate Score
+            const scoreVal = document.getElementById('score-value');
+            const scoreBar = document.getElementById('score-bar');
+            
+            scoreVal.textContent = data.score;
+            scoreBar.style.width = data.score + '%';
+
+            // Transformation
+            document.getElementById('before-score').textContent = data.beforeScore;
+            document.getElementById('after-score').textContent = data.score;
+
+            // Scroll to result
+            document.getElementById('result-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ==================== COPY FUNCTION ====================
+        document.getElementById('copy-btn').addEventListener('click', () => {
+            const text = document.getElementById('result-text').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('copy-btn');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied';
+                setTimeout(() => btn.innerHTML = originalHTML, 2000);
+            });
+        });
+
+        // Initialize
+        initPage();
+    </script>
+</body>
+</html>

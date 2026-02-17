@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Flag Checker — Stop Chasing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bg: '#08080c',
+                        card: '#0e0e14',
+                        border: '#1a1a28',
+                        muted: '#5a5a70',
+                        accent: '#c9a87c',
+                        success: '#5cb88f',
+                        warning: '#d4a55a',
+                        danger: '#c76d6d',
+                    },
+                    fontFamily: {
+                        display: ['Syne', 'sans-serif'],
+                        body: ['DM Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #08080c;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        .app-gradient {
+            background: 
+                radial-gradient(ellipse 50% 30% at 100% 0%, rgba(199, 109, 109, 0.04) 0%, transparent 60%),
+                #08080c;
+        }
+        .card-glow {
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03), 0 20px 50px -20px rgba(0, 0, 0, 0.5);
+        }
+        .input-field {
+            background: #0a0a10;
+            border: 1px solid #1a1a28;
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            border-color: #c9a87c;
+            box-shadow: 0 0 0 3px rgba(201, 168, 124, 0.1);
+            outline: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #c9a87c 0%, #b8976b 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 30px -10px rgba(201, 168, 124, 0.4);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .dropdown-menu {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.2s ease;
+        }
+        .dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .tab {
+            transition: all 0.2s ease;
+        }
+        .tab.active {
+            color: #c9a87c;
+            border-bottom-color: #c9a87c;
+        }
+        .paste-zone {
+            border: 2px dashed #1a1a28;
+            transition: all 0.2s ease;
+        }
+        .paste-zone.active {
+            border-color: #c9a87c;
+            background: rgba(201, 168, 124, 0.05);
+        }
+        .image-preview {
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 0.75rem;
+        }
+    </style>
+</head>
+<body class="app-gradient">
+    <!-- Top Navigation -->
+    <nav class="sticky top-0 z-50 bg-bg/90 backdrop-blur-xl border-b border-border">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <a href="dashboard.html" class="font-display font-bold text-xl text-white hover:text-accent transition-colors">
+                    Stop Chasing
+                </a>
+                <div class="flex items-center gap-3 sm:gap-4">
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-border text-sm">
+                        <span id="credits-display" class="font-semibold text-accent">—</span>
+                        <span class="text-muted hidden sm:inline">Credits</span>
+                    </div>
+                    <button onclick="window.location.href='#upgrade'" class="btn-primary px-4 py-2 rounded-full text-sm font-semibold text-bg focus-ring">
+                        Upgrade
+                    </button>
+                    <div class="relative">
+                        <button id="profile-btn" class="w-9 h-9 rounded-full bg-gradient-to-br from-accent/30 to-accent/10 flex items-center justify-center border border-border hover:border-accent/30 transition-colors focus-ring" aria-label="Profile menu">
+                            <span id="profile-initials" class="font-semibold text-accent text-xs">—</span>
+                        </button>
+                        <div id="profile-dropdown" class="dropdown-menu absolute right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-2xl py-2">
+                            <div class="px-4 py-2 text-xs text-muted border-b border-border mb-1">
+                                <span id="dropdown-email" class="block text-white/80 text-sm truncate"></span>
+                            </div>
+                            <a href="dashboard.html" class="block px-4 py-2 text-sm text-white/80 hover:bg-white/5 transition-colors">Dashboard</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-white/80 hover:bg-white/5 transition-colors">Settings</a>
+                            <div class="border-t border-border my-1"></div>
+                            <button id="sign-out-btn" class="w-full text-left px-4 py-2 text-sm text-muted hover:text-white hover:bg-white/5 transition-colors">Sign Out</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <!-- Back Button -->
+        <div class="mb-8">
+            <a href="dashboard.html" class="inline-flex items-center gap-2 text-muted hover:text-white transition-colors text-sm font-medium group">
+                <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="font-display font-bold text-3xl sm:text-4xl text-white mb-3">
+                Red Flag or Just Overthinking?
+            </h1>
+            <p class="text-muted text-lg">
+                Get clarity before you react.
+            </p>
+        </div>
+
+        <!-- Input Card (Default State) -->
+        <div id="input-card" class="bg-card border border-border rounded-2xl p-6 sm:p-8 card-glow mb-6">
+            <!-- Tabs -->
+            <div class="flex border-b border-border mb-6">
+                <button id="tab-text" class="tab active flex-1 pb-3 text-sm font-medium text-white/70 hover:text-white transition-colors border-b-2 border-transparent" data-tab="text">
+                    Describe Situation
+                </button>
+                <button id="tab-screenshot" class="tab flex-1 pb-3 text-sm font-medium text-white/70 hover:text-white transition-colors border-b-2 border-transparent" data-tab="screenshot">
+                    Upload Screenshot
+                </button>
+            </div>
+
+            <form id="flag-form">
+                <!-- Text Input (visible by default) -->
+                <div id="text-input-section" class="tab-content">
+                    <div class="mb-6">
+                        <label for="situation-input" class="block text-sm font-medium text-white/80 mb-2">
+                            Describe What Happened
+                        </label>
+                        <textarea 
+                            id="situation-input" 
+                            rows="8" 
+                            class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-muted resize-none focus-ring text-sm leading-relaxed"
+                            placeholder="Describe the behavior, text, or situation that made you question things..."
+                        ></textarea>
+                    </div>
+                </div>
+
+                <!-- Screenshot Input (hidden by default) -->
+                <div id="screenshot-input-section" class="tab-content hidden">
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-white/80 mb-2">
+                            Upload or Paste Screenshot
+                        </label>
+                        <div id="paste-zone" class="paste-zone rounded-xl p-6 text-center cursor-pointer" tabindex="0">
+                            <input type="file" id="screenshot-file" accept="image/*" class="hidden">
+                            <div id="preview-container" class="hidden mb-4">
+                                <img id="image-preview" class="image-preview mx-auto max-w-full" src="#" alt="Preview">
+                                <button type="button" id="remove-image" class="text-xs text-muted hover:text-white mt-2 underline">Remove</button>
+                            </div>
+                            <div id="upload-placeholder">
+                                <svg class="w-10 h-10 mx-auto text-muted mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+                                    <path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"></path>
+                                </svg>
+                                <p class="text-muted text-sm">Click to browse or paste an image</p>
+                                <p class="text-xs text-muted/50 mt-1">PNG, JPG up to 5MB</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Context (common) -->
+                <div class="mb-8">
+                    <label for="context-input" class="block text-sm font-medium text-white/50 mb-2">
+                        Context (optional)
+                    </label>
+                    <input 
+                        type="text" 
+                        id="context-input" 
+                        class="input-field w-full px-4 py-2.5 rounded-xl text-white placeholder-muted text-sm focus-ring"
+                        placeholder="e.g., We've been dating for 2 months..."
+                    >
+                </div>
+
+                <button type="submit" id="check-btn" class="btn-primary w-full py-4 rounded-xl font-semibold text-bg text-base focus-ring flex items-center justify-center gap-2">
+                    <span>Check the Signal</span>
+                    <span class="bg-bg/20 text-xs px-2 py-0.5 rounded-full font-bold">2 Credits</span>
+                </button>
+                <p class="text-center text-muted text-xs mt-3">
+                    This action uses 2 credits.
+                </p>
+            </form>
+        </div>
+
+        <!-- Lock State (No Credits) -->
+        <div id="lock-card" class="hidden">
+            <div class="bg-card border border-border rounded-2xl p-8 sm:p-12 card-glow text-center">
+                <div class="w-16 h-16 rounded-full bg-danger/10 flex items-center justify-center mx-auto mb-6">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c76d6d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </div>
+                <h2 class="font-display font-bold text-2xl text-white mb-3">You've used all your credits.</h2>
+                <p class="text-muted mb-8 max-w-sm mx-auto">Upgrade to keep getting clarity.</p>
+                <button class="btn-primary px-8 py-3 rounded-xl font-semibold text-bg focus-ring">
+                    Upgrade Now
+                </button>
+            </div>
+        </div>
+
+        <!-- Result Card (Hidden Initially) -->
+        <div id="result-card" class="hidden">
+            <div class="bg-card border border-border rounded-2xl p-6 sm:p-8 card-glow fade-in">
+                
+                <h2 class="font-display font-bold text-xl text-white mb-8 text-center">Signal Assessment</h2>
+
+                <!-- Flag Badge -->
+                <div class="flex justify-center mb-10">
+                    <div id="flag-badge" class="px-6 py-3 rounded-full border flex items-center gap-3">
+                        <span id="flag-icon" class="w-3 h-3 rounded-full"></span>
+                        <span id="flag-text" class="font-bold text-lg uppercase tracking-wide"></span>
+                    </div>
+                </div>
+
+                <!-- Why It Matters -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-white/50 uppercase tracking-wide mb-3">Why This Matters</h3>
+                    <p id="why-text" class="text-muted leading-relaxed text-sm">—</p>
+                </div>
+
+                <div class="border-t border-border my-6"></div>
+
+                <!-- What It Signals -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-white/50 uppercase tracking-wide mb-3">What This Typically Signals</h3>
+                    <p id="signal-text" class="text-muted leading-relaxed text-sm">—</p>
+                </div>
+
+                <div class="border-t border-border my-6"></div>
+
+                <!-- Recommended Response -->
+                <div>
+                    <h3 class="text-sm font-semibold text-white/50 uppercase tracking-wide mb-3">Recommended Response</h3>
+                    <p id="advice-text" class="text-muted leading-relaxed text-sm mb-6">—</p>
+                    <a href="rewrite.html" class="inline-flex items-center gap-2 text-accent hover:text-accentHover font-medium text-sm transition-colors focus-ring rounded">
+                        Rewrite My Reply
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // ==================== SUPABASE INIT ====================
+        const SUPABASE_URL = 'https://rwcwuugxlfjqxnkwdavt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3Y3d1dWd4bGZqcXhua3dkYXZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2ODMzMzMsImV4cCI6MjA4NjI1OTMzM30.ZscCHxYa2LWw60yB2XKhbo9b8Qs3iZKeJZYhIzPUifw';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let userProfile = null;
+        let selectedFile = null;
+        let currentTab = 'text'; // 'text' or 'screenshot'
+
+        // ==================== AUTH & INIT ====================
+        async function initPage() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            const { data: profile } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+
+            userProfile = profile || { credits: 5, username: session.user.email.split('@')[0] };
+            updateUI();
+        }
+
+        function updateUI() {
+            const credits = userProfile.credits ?? 5;
+            document.getElementById('credits-display').textContent = credits;
+
+            supabaseClient.auth.getUser().then(({ data }) => {
+                if(data.user) {
+                    document.getElementById('dropdown-email').textContent = data.user.email;
+                    document.getElementById('profile-initials').textContent = data.user.email.substring(0, 2).toUpperCase();
+                }
+            });
+
+            // Lock logic (Cost is 2 credits)
+            if (credits < 2) {
+                document.getElementById('input-card').classList.add('hidden');
+                document.getElementById('lock-card').classList.remove('hidden');
+            } else {
+                document.getElementById('input-card').classList.remove('hidden');
+                document.getElementById('lock-card').classList.add('hidden');
+            }
+        }
+
+        // ==================== DROPDOWN ====================
+        const profileBtn = document.getElementById('profile-btn');
+        const profileDropdown = document.getElementById('profile-dropdown');
+
+        profileBtn.addEventListener('click', () => profileDropdown.classList.toggle('active'));
+        document.addEventListener('click', (e) => {
+            if (!profileDropdown.contains(e.target) && !profileBtn.contains(e.target)) {
+                profileDropdown.classList.remove('active');
+            }
+        });
+        document.getElementById('sign-out-btn').addEventListener('click', async () => {
+            await supabaseClient.auth.signOut();
+            window.location.href = 'auth.html';
+        });
+
+        // ==================== TAB SWITCHING ====================
+        const tabText = document.getElementById('tab-text');
+        const tabScreenshot = document.getElementById('tab-screenshot');
+        const textSection = document.getElementById('text-input-section');
+        const screenshotSection = document.getElementById('screenshot-input-section');
+
+        function setActiveTab(tab) {
+            currentTab = tab;
+            tabText.classList.toggle('active', tab === 'text');
+            tabScreenshot.classList.toggle('active', tab === 'screenshot');
+            textSection.classList.toggle('hidden', tab !== 'text');
+            screenshotSection.classList.toggle('hidden', tab !== 'screenshot');
+        }
+
+        tabText.addEventListener('click', () => setActiveTab('text'));
+        tabScreenshot.addEventListener('click', () => setActiveTab('screenshot'));
+
+        // ==================== SCREENSHOT UPLOAD / PASTE ====================
+        const pasteZone = document.getElementById('paste-zone');
+        const fileInput = document.getElementById('screenshot-file');
+        const previewContainer = document.getElementById('preview-container');
+        const uploadPlaceholder = document.getElementById('upload-placeholder');
+        const imagePreview = document.getElementById('image-preview');
+        const removeBtn = document.getElementById('remove-image');
+
+        // Click to browse
+        pasteZone.addEventListener('click', () => fileInput.click());
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        });
+
+        // Paste event
+        pasteZone.addEventListener('paste', (e) => {
+            const items = e.clipboardData.items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const file = items[i].getAsFile();
+                    handleFile(file);
+                    break;
+                }
+            }
+        });
+
+        // Drag & drop
+        pasteZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            pasteZone.classList.add('active');
+        });
+        pasteZone.addEventListener('dragleave', () => {
+            pasteZone.classList.remove('active');
+        });
+        pasteZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            pasteZone.classList.remove('active');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleFile(file);
+            }
+        });
+
+        function handleFile(file) {
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File too large. Max 5MB.');
+                return;
+            }
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                previewContainer.classList.remove('hidden');
+                uploadPlaceholder.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectedFile = null;
+            fileInput.value = '';
+            previewContainer.classList.add('hidden');
+            uploadPlaceholder.classList.remove('hidden');
+            imagePreview.src = '#';
+        });
+
+        // ==================== ANALYSIS LOGIC ====================
+        document.getElementById('flag-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('check-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="animate-spin h-5 w-5 text-bg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+
+            try {
+                const user = (await supabaseClient.auth.getUser()).data.user;
+                if (!user) throw new Error('Not authenticated');
+
+                let situationText = null;
+                let screenshotUrl = null;
+
+                if (currentTab === 'text') {
+                    situationText = document.getElementById('situation-input').value;
+                    if (!situationText.trim()) {
+                        alert('Please describe the situation.');
+                        return;
+                    }
+                } else {
+                    if (!selectedFile) {
+                        alert('Please select or paste a screenshot.');
+                        return;
+                    }
+                    // Upload to Supabase Storage
+                    const fileExt = selectedFile.name.split('.').pop();
+                    const fileName = `red-flags/${user.id}/${Date.now()}.${fileExt}`;
+                    const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                        .from('screenshots')  // using same bucket as analyze page
+                        .upload(fileName, selectedFile, { cacheControl: '3600', upsert: false });
+                    if (uploadError) throw uploadError;
+                    
+                    // Get public URL
+                    const { data: { publicUrl } } = supabaseClient.storage
+                        .from('screenshots')
+                        .getPublicUrl(fileName);
+                    screenshotUrl = publicUrl;
+                }
+
+                const context = document.getElementById('context-input').value;
+
+                // --- SIMULATED API CALL (replace with real analysis) ---
+                await new Promise(resolve => setTimeout(resolve, 1800)); 
+
+                const result = generateMockAnalysis();
+
+                // Save to database
+                const { error: insertError } = await supabaseClient
+                    .from('red_flag_checks')
+                    .insert({
+                        user_id: user.id,
+                        situation_text: situationText,
+                        screenshot_url: screenshotUrl,
+                        context: context || null,
+                        result_data: result,
+                        credits_used: 2
+                    });
+                if (insertError) throw insertError;
+
+                // Deduct Credits
+                userProfile.credits = Math.max(0, userProfile.credits - 2);
+                await supabaseClient
+                    .from('profiles')
+                    .update({ credits: userProfile.credits })
+                    .eq('id', user.id);
+
+                displayResult(result);
+                
+            } catch (err) {
+                console.error(err);
+                alert('Something went wrong. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>Check the Signal</span><span class="bg-bg/20 text-xs px-2 py-0.5 rounded-full font-bold">2 Credits</span>';
+                updateUI();
+            }
+        });
+
+        function generateMockAnalysis() {
+            const scenarios = [
+                {
+                    type: 'green',
+                    why: "This behavior demonstrates consistency and consideration. It shows they value your time and are actively integrating you into their life.",
+                    signal: "Security and genuine interest. When someone is reliable, it often means they are looking for stability rather than just playing games.",
+                    advice: "Match their energy. You don't need to play it cool here. Respond naturally and continue building the connection."
+                },
+                {
+                    type: 'yellow',
+                    why: "This behavior is ambiguous. It isn't necessarily malicious, but it creates uncertainty that requires monitoring.",
+                    signal: "Potential indecisiveness or emotional unavailability. It might also mean they are overwhelmed in other areas of their life.",
+                    advice: "Don't escalate yet, but don't ignore it. Observe if this becomes a pattern. If it repeats, address it directly using a boundary statement."
+                },
+                {
+                    type: 'red',
+                    why: "This is a violation of basic respect or boundaries. It signals a lack of empathy or an attempt to control the dynamic.",
+                    signal: "Manipulation or narcissistic traits. This behavior often worsens over time rather than improving.",
+                    advice: "Pull back immediately. Do not confront them emotionally. Consider ending the interaction to protect your energy."
+                }
+            ];
+
+            return scenarios[Math.floor(Math.random() * scenarios.length)];
+        }
+
+        function displayResult(data) {
+            document.getElementById('result-card').classList.remove('hidden');
+            
+            const badge = document.getElementById('flag-badge');
+            const icon = document.getElementById('flag-icon');
+            const text = document.getElementById('flag-text');
+
+            badge.className = "px-6 py-3 rounded-full border flex items-center gap-3";
+            icon.className = "w-3 h-3 rounded-full";
+
+            if (data.type === 'green') {
+                badge.classList.add('bg-success/10', 'border-success/20');
+                icon.classList.add('bg-success');
+                text.textContent = "Green Flag";
+                text.className = "font-bold text-lg uppercase tracking-wide text-success";
+            } else if (data.type === 'yellow') {
+                badge.classList.add('bg-warning/10', 'border-warning/20');
+                icon.classList.add('bg-warning');
+                text.textContent = "Yellow Flag";
+                text.className = "font-bold text-lg uppercase tracking-wide text-warning";
+            } else {
+                badge.classList.add('bg-danger/10', 'border-danger/20');
+                icon.classList.add('bg-danger');
+                text.textContent = "Red Flag";
+                text.className = "font-bold text-lg uppercase tracking-wide text-danger";
+            }
+
+            document.getElementById('why-text').textContent = data.why;
+            document.getElementById('signal-text').textContent = data.signal;
+            document.getElementById('advice-text').textContent = data.advice;
+
+            document.getElementById('result-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        initPage();
+    </script>
+</body>
+</html>

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Stop Chasing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bg: '#08080c',
+                        card: '#0e0e14',
+                        cardHover: '#141420',
+                        border: '#1a1a28',
+                        borderHover: '#2a2a3f',
+                        muted: '#5a5a70',
+                        accent: '#c9a87c',
+                        accentHover: '#dbb98d',
+                        success: '#5cb88f',
+                        warning: '#d4a55a',
+                        danger: '#c76d6d',
+                    },
+                    fontFamily: {
+                        display: ['Syne', 'sans-serif'],
+                        body: ['DM Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #08080c;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        .dashboard-gradient {
+            background: 
+                radial-gradient(ellipse 60% 40% at 0% 0%, rgba(201, 168, 124, 0.04) 0%, transparent 50%),
+                radial-gradient(ellipse 50% 30% at 100% 100%, rgba(139, 92, 246, 0.03) 0%, transparent 40%),
+                #08080c;
+        }
+        .card-base {
+            background: linear-gradient(145deg, #101018 0%, #0c0c12 100%);
+            border: 1px solid #1a1a28;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-base:hover { border-color: #2a2a3f; transform: translateY(-2px); }
+        
+        .feature-card {
+            background: linear-gradient(145deg, #111119 0%, #0d0d14 100%);
+            border: 1px solid #1a1a28;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .feature-card:hover {
+            border-color: rgba(201, 168, 124, 0.25);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), 0 0 60px -20px rgba(201, 168, 124, 0.15);
+        }
+        .feature-card:hover .feature-icon { background: rgba(201, 168, 124, 0.15); }
+        .feature-icon { transition: all 0.35s ease; }
+        
+        .upgrade-card {
+            background: linear-gradient(145deg, #141420 0%, #0e0e18 100%);
+            border: 1px solid rgba(201, 168, 124, 0.2);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #c9a87c 0%, #b8976b 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px -8px rgba(201, 168, 124, 0.35);
+        }
+        .btn-secondary {
+            background: rgba(201, 168, 124, 0.08);
+            border: 1px solid rgba(201, 168, 124, 0.2);
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: rgba(201, 168, 124, 0.12);
+            border-color: rgba(201, 168, 124, 0.35);
+        }
+        .activity-item { transition: all 0.2s ease; }
+        .activity-item:hover { background: rgba(255, 255, 255, 0.02); }
+        
+        .progress-bar { background: rgba(201, 168, 124, 0.15); overflow: hidden; }
+        .progress-fill {
+            background: linear-gradient(90deg, #c9a87c, #dbb98d);
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dropdown {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .focus-ring:focus-visible { outline: 2px solid #c9a87c; outline-offset: 2px; }
+        
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        .badge-glow { box-shadow: 0 0 20px -5px rgba(201, 168, 124, 0.2); }
+        .stat-card {
+            background: linear-gradient(145deg, #101018 0%, #0c0c12 100%);
+            border: 1px solid #1a1a28;
+        }
+        .empty-state {
+            padding: 3rem 1rem;
+            text-align: center;
+            color: #5a5a70;
+        }
+    </style>
+</head>
+<body class="dashboard-gradient">
+    <!-- Top Navigation -->
+    <nav class="sticky top-0 z-50 bg-bg/90 backdrop-blur-xl border-b border-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <a href="dashboard.html" class="font-display font-bold text-xl text-white">Stop Chasing</a>
+                <div class="flex items-center gap-3 sm:gap-4">
+                    <div id="credits-badge-desktop" class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border badge-glow">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9a87c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                        </svg>
+                        <span id="credits-desktop" class="text-sm font-medium text-white">—</span>
+                    </div>
+                    <div id="credits-badge-mobile" class="sm:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border">
+                        <span id="credits-mobile" class="text-sm font-semibold text-accent">—</span>
+                    </div>
+                    <!-- Changed to link pointing to upgrade.html -->
+                    <a href="upgrade.html" class="btn-secondary px-4 py-2 rounded-full text-sm font-medium text-accent focus-ring hidden sm:block">Upgrade</a>
+                    <div class="relative">
+                        <button id="profile-btn" class="w-10 h-10 rounded-full bg-gradient-to-br from-accent/30 to-accent/10 flex items-center justify-center focus-ring border border-border hover:border-accent/30 transition-colors" aria-label="Profile menu" aria-expanded="false">
+                            <span id="profile-initials" class="font-semibold text-accent text-sm">—</span>
+                        </button>
+                        <div id="profile-dropdown" class="dropdown absolute right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-2xl py-2">
+                            <div class="px-4 py-2 text-sm text-white/50 border-b border-border mb-2">
+                                Signed in as <span id="dropdown-email" class="text-white/80"></span>
+                            </div>
+                            <!-- Changed href to settings.html -->
+                            <a href="settings.html" class="block px-4 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors">Settings</a>
+                           
+                            <div class="border-t border-border my-2"></div>
+                            <a href="#" id="sign-out-link" class="block px-4 py-2.5 text-sm text-muted hover:text-white hover:bg-white/5 transition-colors">Sign Out</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        
+        <!-- Header Section -->
+        <header class="mb-10">
+            <h1 class="font-display font-bold text-2xl sm:text-3xl text-white mb-2">
+                What's happening, <span id="user-greeting">friend</span>?
+            </h1>
+            <p class="text-muted text-base sm:text-lg">Choose what you want to improve today.</p>
+        </header>
+
+        <!-- Primary Action Grid -->
+        <section class="mb-12" aria-label="Main features">
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                <!-- Card 1: Rewrite My Reply -->
+                <a href="rewrite.html" class="feature-card rounded-2xl p-6 cursor-pointer group focus-ring" role="button">
+                    <div class="feature-icon w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-5">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c9a87c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-bold text-lg text-white mb-2">Rewrite My Reply</h3>
+                    <p class="text-muted text-sm leading-relaxed">Turn weak texts into confident messages.</p>
+                </a>
+                
+                <!-- Card 2: Analyze Conversation -->
+                <a href="analyze.html" class="feature-card rounded-2xl p-6 cursor-pointer group focus-ring" role="button">
+                    <div class="feature-icon w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-5">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c9a87c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-bold text-lg text-white mb-2">Analyze Conversation</h3>
+                    <p class="text-muted text-sm leading-relaxed">See who's more invested and your ghosting risk.</p>
+                </a>
+                
+                <!-- Card 3: Red Flag Checker -->
+                <a href="red-flag.html" class="feature-card rounded-2xl p-6 cursor-pointer group focus-ring" role="button">
+                    <div class="feature-icon w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-5">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c9a87c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+                            <line x1="4" y1="22" x2="4" y2="15"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-bold text-lg text-white mb-2">Red Flag Checker</h3>
+                    <p class="text-muted text-sm leading-relaxed">Know if it's a warning sign or just overthinking.</p>
+                </a>
+                
+                <!-- Card 4: Re-Engage Strategically -->
+                <a href="re-engage.html" class="feature-card rounded-2xl p-6 cursor-pointer group focus-ring" role="button">
+                    <div class="feature-icon w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-5">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c9a87c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-bold text-lg text-white mb-2">Re-Engage Strategically</h3>
+                    <p class="text-muted text-sm leading-relaxed">Send the right follow-up without chasing.</p>
+                </a>
+            </div>
+        </section>
+
+        <!-- Two Column Layout -->
+        <div class="grid lg:grid-cols-3 gap-6 lg:gap-8">
+            <div class="lg:col-span-2 space-y-8">
+                
+                <!-- Recent Activity -->
+                <section>
+                    <h2 class="font-display font-bold text-lg text-white mb-4">Recent Activity</h2>
+                    <div class="card-base rounded-2xl overflow-hidden">
+                        <div id="activity-list" class="divide-y divide-border">
+                            <!-- Activity items will be injected here -->
+                        </div>
+                        <div id="activity-empty" class="empty-state hidden">
+                            <p>No activity yet. Start by using a tool above!</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Your Progress Stats -->
+                <section>
+                    <h2 class="font-display font-bold text-lg text-white mb-4">Your Progress</h2>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="stat-card rounded-xl p-4">
+                            <p class="text-muted text-xs uppercase tracking-wide mb-2">Messages Optimized</p>
+                            <p id="stat-messages" class="font-display font-bold text-2xl text-white mb-3">0</p>
+                            <div class="progress-bar h-1 rounded-full">
+                                <div id="progress-messages" class="progress-fill h-full rounded-full" style="width: 0%"></div>
+                            </div>
+                            <p class="text-xs text-muted mt-2">All time</p>
+                        </div>
+                        <div class="stat-card rounded-xl p-4">
+                            <p class="text-muted text-xs uppercase tracking-wide mb-2">Conversations Analyzed</p>
+                            <p id="stat-analyzed" class="font-display font-bold text-2xl text-white mb-3">0</p>
+                            <div class="progress-bar h-1 rounded-full">
+                                <div id="progress-analyzed" class="progress-fill h-full rounded-full" style="width: 0%"></div>
+                            </div>
+                            <p class="text-xs text-muted mt-2">Total</p>
+                        </div>
+                        <div class="stat-card rounded-xl p-4">
+                            <p class="text-muted text-xs uppercase tracking-wide mb-2">Red Flags Spotted</p>
+                            <p id="stat-flags" class="font-display font-bold text-2xl text-white mb-3">0</p>
+                            <div class="progress-bar h-1 rounded-full">
+                                <div id="progress-flags" class="progress-fill h-full rounded-full" style="width: 0%"></div>
+                            </div>
+                            <p class="text-xs text-muted mt-2">Avoided</p>
+                        </div>
+                        <div class="stat-card rounded-xl p-4">
+                            <p class="text-muted text-xs uppercase tracking-wide mb-2">Credits Used</p>
+                            <p id="stat-used" class="font-display font-bold text-2xl text-white mb-3">0</p>
+                            <div class="progress-bar h-1 rounded-full">
+                                <div id="progress-used" class="progress-fill h-full rounded-full" style="width: 0%"></div>
+                            </div>
+                            <p class="text-xs text-muted mt-2"><span id="credits-remaining">—</span> remaining</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            
+            <!-- Right Column: Upgrade Card -->
+            <div class="lg:col-span-1">
+                <div class="upgrade-card rounded-2xl p-6 sticky top-24">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9a87c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                        </div>
+                        <span class="text-xs font-semibold text-accent uppercase tracking-wide">Pro Plan</span>
+                    </div>
+                    <h3 class="font-display font-bold text-xl text-white mb-2">Don't run out of clarity.</h3>
+                    <p class="text-muted text-sm leading-relaxed mb-6">Upgrade to Pro for 200 monthly credits and advanced analysis features.</p>
+                    <ul class="space-y-2.5 mb-6">
+                        <li class="flex items-center gap-2 text-sm text-white/70">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a87c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            200 credits per month
+                        </li>
+                        <li class="flex items-center gap-2 text-sm text-white/70">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a87c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            Multi-version replies
+                        </li>
+                        <li class="flex items-center gap-2 text-sm text-white/70">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a87c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            Priority processing
+                        </li>
+                    </ul>
+                    <!-- Changed to link pointing to upgrade.html -->
+                    <a href="upgrade.html" class="btn-primary w-full py-3.5 rounded-xl font-semibold text-bg text-sm focus-ring inline-block text-center">Upgrade to Pro</a>
+                    <p class="text-center text-xs text-muted mt-4">$19/month. Cancel anytime.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-border mt-16 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p class="text-muted text-sm">2024 Stop Chasing. All rights reserved.</p>
+                <nav class="flex items-center gap-6">
+                    <a href="privacy.html" class="text-muted hover:text-white text-sm transition-colors focus-ring">Privacy</a>
+                    <a href="#" class="text-muted hover:text-white text-sm transition-colors focus-ring">Terms</a>
+                    <a href="#" class="text-muted hover:text-white text-sm transition-colors focus-ring">Support</a>
+                </nav>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // ==================== SUPABASE INIT ====================
+        const SUPABASE_URL = 'https://rwcwuugxlfjqxnkwdavt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3Y3d1dWd4bGZqcXhua3dkYXZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2ODMzMzMsImV4cCI6MjA4NjI1OTMzM30.ZscCHxYa2LWw60yB2XKhbo9b8Qs3iZKeJZYhIzPUifw';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ==================== STATE ====================
+        let currentUser = null;
+        let profile = null;
+
+        // ==================== MAIN INIT ====================
+        async function initDashboard() {
+            try {
+                // 1. Check Session
+                const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+                if (sessionError) throw sessionError;
+                if (!session) { window.location.href = 'auth.html'; return; }
+                
+                currentUser = session.user;
+
+                // 2. Fetch Profile
+                const { data: profileData, error: profileError } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+
+                if (profileError && profileError.code !== 'PGRST116') { 
+                    console.warn('Profile fetch error:', profileError.message);
+                }
+
+                profile = profileData || { 
+                    username: currentUser.email?.split('@')[0], 
+                    credits: 5 
+                };
+
+                updateUI();
+                await fetchActivityAndStats(); // unified fetch
+
+            } catch (err) {
+                console.error('Init error:', err);
+                window.location.href = 'auth.html';
+            }
+        }
+
+        // ==================== UPDATE UI ====================
+        function updateUI() {
+            // Greeting
+            document.getElementById('user-greeting').textContent = profile.username?.split(' ')[0] || 'friend';
+
+            // Credits
+            const credits = profile.credits ?? 5;
+            document.getElementById('credits-desktop').textContent = credits;
+            document.getElementById('credits-mobile').textContent = credits;
+            document.getElementById('credits-remaining').textContent = credits;
+
+            // Profile Initials
+            const initials = (profile.username || currentUser.email || '??').substring(0, 2).toUpperCase();
+            document.getElementById('profile-initials').textContent = initials;
+            document.getElementById('dropdown-email').textContent = currentUser.email;
+        }
+
+        // ==================== FETCH ACTIVITY & STATS ====================
+        async function fetchActivityAndStats() {
+            // Define all four tables to query
+            const tables = [
+                { name: 'rewrites', type: 'rewrite', title: 'Rewrote a message', descField: 'original_message' },
+                { name: 'analyses', type: 'analyze', title: 'Analyzed a conversation', descField: 'conversation_text' },
+                { name: 'red_flag_checks', type: 'red-flag', title: 'Checked a red flag', descField: 'situation_text' },
+                { name: 'reengagements', type: 're-engage', title: 'Generated re-engagement strategy', descField: 'last_message' }
+            ];
+
+            let allActivities = [];
+            let totalRewrites = 0, totalAnalyses = 0, totalFlags = 0, totalCreditsUsed = 0;
+
+            // Query each table
+            for (const table of tables) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from(table.name)
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .order('created_at', { ascending: false });
+
+                    if (error) {
+                        if (error.code === '42P01') continue; // table doesn't exist, skip
+                        throw error;
+                    }
+
+                    if (data && data.length > 0) {
+                        // Count rows for stats
+                        if (table.type === 'rewrite') totalRewrites = data.length;
+                        if (table.type === 'analyze') totalAnalyses = data.length;
+                        if (table.type === 'red-flag') totalFlags = data.length;
+
+                        // Sum credits_used
+                        totalCreditsUsed += data.reduce((sum, item) => sum + (item.credits_used || 0), 0);
+
+                        // Format activities
+                        const activities = data.map(item => ({
+                            type: table.type,
+                            title: table.title,
+                            description: item[table.descField] ? item[table.descField].substring(0, 60) + '…' : '',
+                            created_at: item.created_at,
+                            credits_used: item.credits_used
+                        }));
+                        allActivities = allActivities.concat(activities);
+                    }
+                } catch (err) {
+                    console.warn(`Error fetching ${table.name}:`, err.message);
+                }
+            }
+
+            // Sort all activities by date (newest first)
+            allActivities.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            // Update stats
+            updateStats({
+                messages: totalRewrites,
+                analyzed: totalAnalyses,
+                flags: totalFlags,
+                creditsUsed: totalCreditsUsed
+            });
+
+            // Render activity (limit to 10 most recent)
+            renderActivity(allActivities.slice(0, 10));
+        }
+
+        // ==================== RENDER ACTIVITY ====================
+        function renderActivity(activities) {
+            const container = document.getElementById('activity-list');
+            const emptyEl = document.getElementById('activity-empty');
+
+            if (activities.length === 0) {
+                emptyEl.classList.remove('hidden');
+                container.classList.add('hidden');
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+            container.classList.remove('hidden');
+            container.innerHTML = '';
+
+            activities.forEach(item => {
+                const iconColor = item.type === 'rewrite' ? '#c9a87c' : 
+                                  item.type === 'analyze' ? '#5cb88f' : 
+                                  item.type === 'red-flag' ? '#c76d6d' : '#d4a55a';
+                
+                const date = new Date(item.created_at);
+                const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const dateStr = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+                const html = `
+                    <div class="activity-item flex items-center justify-between p-4 sm:p-5">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    ${getIconPath(item.type)}
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-white font-medium text-sm sm:text-base">${item.title}</p>
+                                <p class="text-muted text-sm">${item.description}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-muted text-sm">${dateStr}</p>
+                            <p class="text-xs text-muted/60 mt-0.5">${timeStr}</p>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function getIconPath(type) {
+            switch(type) {
+                case 'rewrite': return '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>';
+                case 'analyze': return '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>';
+                case 'red-flag': return '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>';
+                default: return '<circle cx="12" cy="12" r="10"/>';
+            }
+        }
+
+        // ==================== UPDATE STATS ====================
+        function updateStats({ messages, analyzed, flags, creditsUsed }) {
+            document.getElementById('stat-messages').textContent = messages;
+            document.getElementById('stat-analyzed').textContent = analyzed;
+            document.getElementById('stat-flags').textContent = flags;
+            document.getElementById('stat-used').textContent = creditsUsed;
+
+            // Simple progress bars (demo – you can set realistic caps later)
+            const messageCap = 50;
+            const analyzeCap = 30;
+            const flagCap = 20;
+            const creditCap = 200; // Pro plan cap
+
+            document.getElementById('progress-messages').style.width = Math.min((messages / messageCap) * 100, 100) + '%';
+            document.getElementById('progress-analyzed').style.width = Math.min((analyzed / analyzeCap) * 100, 100) + '%';
+            document.getElementById('progress-flags').style.width = Math.min((flags / flagCap) * 100, 100) + '%';
+            
+            const totalCreditsAvailable = (profile.credits || 0) + creditsUsed; // total purchased/spent
+            const usedPercent = (creditsUsed / creditCap) * 100;
+            document.getElementById('progress-used').style.width = Math.min(usedPercent, 100) + '%';
+        }
+
+        // ==================== SIGN OUT ====================
+        async function signOut() {
+            const { error } = await supabaseClient.auth.signOut();
+            if (error) {
+                console.error('Sign out error:', error.message);
+                alert('Sign out failed.');
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            initDashboard();
+
+            // Profile Dropdown
+            const profileBtn = document.getElementById('profile-btn');
+            const profileDropdown = document.getElementById('profile-dropdown');
+            
+            profileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                profileDropdown.classList.toggle('active');
+            });
+            
+            document.addEventListener('click', (e) => {
+                if (!profileDropdown.contains(e.target) && !profileBtn.contains(e.target)) {
+                    profileDropdown.classList.remove('active');
+                }
+            });
+
+            // Sign Out
+            document.getElementById('sign-out-link').addEventListener('click', (e) => {
+                e.preventDefault();
+                signOut();
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stop Chasing — Text with Confidence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bg: '#08080c',
+                        card: '#12121a',
+                        border: '#1f1f2e',
+                        muted: '#71717a',
+                        accent: '#ff6b5b',
+                        accentDark: '#e55a4a',
+                        glow: 'rgba(255, 107, 91, 0.15)',
+                    },
+                    fontFamily: {
+                        display: ['Syne', 'sans-serif'],
+                        body: ['DM Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #08080c;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        
+        .gradient-bg {
+            background: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255, 107, 91, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 100% 0%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+                #08080c;
+        }
+        
+        .hero-gradient {
+            background: 
+                radial-gradient(ellipse 100% 60% at 70% 0%, rgba(255, 107, 91, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse 50% 50% at 0% 50%, rgba(139, 92, 246, 0.06) 0%, transparent 40%),
+                #08080c;
+        }
+        
+        .card-gradient {
+            background: linear-gradient(135deg, #14141f 0%, #0d0d14 100%);
+        }
+        
+        .glow-accent {
+            box-shadow: 0 0 60px rgba(255, 107, 91, 0.2), 0 0 100px rgba(255, 107, 91, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #ff6b5b 0%, #e55a4a 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(255, 107, 91, 0.3);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid #2a2a3a;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            border-color: #ff6b5b;
+            color: #ff6b5b;
+        }
+        
+        .feature-card {
+            background: linear-gradient(135deg, #14141f 0%, #0d0d14 100%);
+            border: 1px solid #1f1f2e;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .feature-card:hover {
+            border-color: rgba(255, 107, 91, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .feature-card:hover .feature-icon {
+            background: rgba(255, 107, 91, 0.15);
+        }
+        
+        .feature-icon {
+            transition: all 0.4s ease;
+        }
+        
+        .pricing-card {
+            background: linear-gradient(135deg, #14141f 0%, #0d0d14 100%);
+            border: 1px solid #1f1f2e;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .pricing-popular {
+            background: linear-gradient(135deg, #1a1a28 0%, #12121a 100%);
+            border: 1px solid rgba(255, 107, 91, 0.4);
+            box-shadow: 0 0 60px rgba(255, 107, 91, 0.1);
+        }
+        
+        .mockup-card {
+            background: linear-gradient(135deg, #161622 0%, #0e0e16 100%);
+            border: 1px solid #252535;
+            backdrop-filter: blur(10px);
+        }
+        
+        .score-ring {
+            background: conic-gradient(#ff6b5b 0deg, #ff6b5b calc(var(--score) * 3.6deg), #1f1f2e calc(var(--score) * 3.6deg));
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .reveal-delay-4 { transition-delay: 0.4s; }
+        
+        .step-line {
+            background: linear-gradient(180deg, #ff6b5b 0%, transparent 100%);
+        }
+        
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+        
+        .testimonial-card {
+            background: linear-gradient(135deg, #14141f 0%, #0d0d14 100%);
+            border: 1px solid #1f1f2e;
+        }
+        
+        .focus-ring:focus-visible {
+            outline: 2px solid #ff6b5b;
+            outline-offset: 2px;
+        }
+        
+        .nav-link {
+            position: relative;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #ff6b5b;
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <div class="noise-overlay" aria-hidden="true"></div>
+    
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-bg/80 backdrop-blur-lg border-b border-border">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="#" class="font-display font-bold text-xl tracking-tight text-white">
+                Stop Chasing
+            </a>
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#features" class="nav-link text-muted hover:text-white transition-colors text-sm font-medium focus-ring">Features</a>
+                <a href="#how-it-works" class="nav-link text-muted hover:text-white transition-colors text-sm font-medium focus-ring">How It Works</a>
+                <a href="#pricing" class="nav-link text-muted hover:text-white transition-colors text-sm font-medium focus-ring">Pricing</a>
+            </div>
+            <a href="auth.html" class="btn-primary px-5 py-2.5 rounded-full text-sm font-semibold text-white focus-ring">
+                Get Started
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient min-h-screen pt-24 pb-20 px-6 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid lg:grid-cols-2 gap-12 items-center min-h-[calc(100vh-120px)]">
+                <div class="reveal">
+                    <p class="text-accent font-semibold text-sm tracking-widest uppercase mb-6">
+                        Dating Confidence Tool
+                    </p>
+                    <h1 class="font-display font-800 text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.1] mb-6">
+                        Stop sounding desperate. <br>
+                        <span class="text-accent">Start texting with power.</span>
+                    </h1>
+                    <p class="text-lg sm:text-xl text-muted max-w-xl mb-8 leading-relaxed">
+                        Analyze mixed signals. Rewrite your replies. Know where you stand — before you double text.
+                    </p>
+                    <div class="flex flex-wrap gap-4 mb-8">
+                        <a href="auth.html" class="btn-primary px-8 py-4 rounded-full text-base font-semibold text-white focus-ring inline-flex items-center gap-2">
+                            Analyze My Text
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <a href="#how-it-works" class="btn-secondary px-8 py-4 rounded-full text-base font-semibold text-white focus-ring inline-flex items-center">
+                            See How It Works
+                        </a>
+                    </div>
+                    <p class="text-sm text-muted">
+                        Used by thousands navigating dating and situationships.
+                    </p>
+                </div>
+                
+                <!-- Mockup -->
+                <div class="reveal reveal-delay-2 relative flex justify-center lg:justify-end">
+                    <div class="animate-float relative">
+                        <div class="mockup-card rounded-3xl p-6 w-full max-w-sm glow-accent">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-accentDark flex items-center justify-center">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-white text-sm">Text Analysis</p>
+                                    <p class="text-xs text-muted">3 messages analyzed</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-bg/50 rounded-2xl p-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="text-sm text-muted">Interest Score</span>
+                                        <span class="text-accent font-bold">78%</span>
+                                    </div>
+                                    <div class="h-2 bg-border rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-accent to-accentDark rounded-full" style="width: 78%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-bg/50 rounded-2xl p-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="text-sm text-muted">Confidence Score</span>
+                                        <span class="text-accent font-bold">91%</span>
+                                    </div>
+                                    <div class="h-2 bg-border rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-accent to-accentDark rounded-full" style="width: 91%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-accent/10 border border-accent/20 rounded-2xl p-4">
+                                    <p class="text-xs text-accent font-medium uppercase tracking-wide mb-2">Suggestion</p>
+                                    <p class="text-sm text-white/80">Wait 2 hours before replying. Your last message showed high investment.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Floating elements -->
+                        <div class="absolute -top-4 -right-4 mockup-card rounded-xl p-3 animate-float" style="animation-delay: -2s;">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                <span class="text-xs text-muted">No red flags</span>
+                            </div>
+                        </div>
+                        
+                        <div class="absolute -bottom-4 -left-4 mockup-card rounded-xl p-3 animate-float" style="animation-delay: -4s;">
+                            <div class="flex items-center gap-2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff6b5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span class="text-xs text-muted">Rewritten</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-60">
+            <span class="text-xs text-muted">Scroll to explore</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted animate-bounce">
+                <path d="M12 5v14M5 12l7 7 7-7"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="py-24 px-6 relative">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 reveal">
+                <h2 class="font-display font-bold text-3xl sm:text-4xl lg:text-5xl mb-4">
+                    Overthinking every message?
+                </h2>
+                <p class="text-muted text-lg max-w-xl mx-auto">
+                    The anxiety of modern dating is real. You're not alone.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <article class="feature-card rounded-2xl p-8 reveal reveal-delay-1">
+                    <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-6">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6b5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-bold text-xl mb-3 text-white">
+                        "Why haven't they replied?"
+                    </h3>
+                    <p class="text-muted leading-relaxed">
+                        Hours pass. Days even. You check your phone obsessively, reading into every silence like it means something.
+                    </p>
+                </article>
+                
+                <article class="feature-card rounded-2xl p-8 reveal reveal-delay-2">
+                    <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-6">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6b5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-bold text-xl mb-3 text-white">
+                        "Did I sound needy?"
+                    </h3>
+                    <p class="text-muted leading-relaxed">
+                        You typed, deleted, retyped. Sent. Now you wonder if that emoji was too much. If asking was too forward.
+                    </p>
+                </article>
+                
+                <article class="feature-card rounded-2xl p-8 reveal reveal-delay-3">
+                    <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-6">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6b5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                            <line x1="4.35" y1="4.35" x2="19.65" y2="19.65"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-bold text-xl mb-3 text-white">
+                        "Are they losing interest?"
+                    </h3>
+                    <p class="text-muted leading-relaxed">
+                        The replies got shorter. The energy shifted. Something feels off but you can't name it.
+                    </p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-24 px-6 relative">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-accent/5 to-transparent pointer-events-none"></div>
+        <div class="max-w-6xl mx-auto relative">
+            <div class="text-center mb-16 reveal">
+                <h2 class="font-display font-bold text-3xl sm:text-4xl lg:text-5xl mb-4">
+                    Clarity. Confidence. Control.
+                </h2>
+                <p class="text-muted text-lg max-w-xl mx-auto">
+                    Four powerful tools to transform how you communicate.
+                </p>
+            </div>
+            
+            <div class="grid sm:grid-cols-2 gap-6">
+                <article class="feature-card rounded-2xl p-8 reveal reveal-delay-1 group">
+                    <div class="feature-icon w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-6">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ff6b5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-bold text-2xl mb-3 text-white">
+                        Rewrite My Reply
+                    </h3>
+                    <p class="text-muted leading-relaxed text-lg">
+                        Turn weak texts into confident messages. Paste your draft, choose your tone, get a version that sounds secure — not thirsty.
+                    </p>
+                </article>
+                
+                <article class="feature-card rounded-2xl p-8 reveal reveal-delay-2 group">
+                    <div class="feature-icon w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-6">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ff6b5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-bold text-2xl mb-3 text-white">
+                        Analyze Conversation
+                    </h3>
+                    <p class="text-muted leading-relaxed text-lg">
+                        See who's more invested and your ghosting risk. Upload a chat, get an honest breakdown of the power dynamic.
+                    </p>
+                </article>
+                
+                <article class="feature-card rounded-2xl p-8 reveal reveal-delay-3 group">
+                    <div class="feature-icon w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-6">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ff6b5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-bold text-2xl mb-3 text-white">
+                        Red Flag Checker
+                    </h3>
+                    <p class="text-muted leading-relaxed text-lg">
+                        Know if it's a pattern or a warning sign. Get objective analysis on behaviors you're too close to see clearly.
+                    </p>
+                </article>
+                
+                <article class="feature-card rounded-2xl p-8 reveal reveal-delay-4 group">
+                    <div class="feature-icon w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-6">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ff6b5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-bold text-2xl mb-3 text-white">
+                        Re-Engage Strategically
+                    </h3>
+                    <p class="text-muted leading-relaxed text-lg">
+                        Send the right follow-up without chasing. Get suggestions that create intrigue, not desperation.
+                    </p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="py-24 px-6 relative">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-20 reveal">
+                <h2 class="font-display font-bold text-3xl sm:text-4xl lg:text-5xl mb-4">
+                    Three steps to better texts
+                </h2>
+                <p class="text-muted text-lg">
+                    No learning curve. Instant clarity.
+                </p>
+            </div>
+            
+            <div class="relative">
+                <!-- Connection line -->
+                <div class="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-accent via-accent/50 to-transparent"></div>
+                
+                <div class="space-y-16 md:space-y-0">
+                    <!-- Step 1 -->
+                    <div class="reveal reveal-delay-1 md:grid md:grid-cols-2 md:gap-16 md:items-center">
+                        <div class="md:text-right md:pr-12 mb-8 md:mb-0">
+                            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-accent text-white font-display font-bold text-lg mb-4 md:float-right md:ml-6">
+                                1
+                            </div>
+                            <h3 class="font-display font-bold text-2xl mb-2 text-white">
+                                Paste your message
+                            </h3>
+                            <p class="text-muted leading-relaxed">
+                                Drop in what you want to send, or a conversation that's confusing you.
+                            </p>
+                        </div>
+                        <div class="md:pl-12">
+                            <div class="mockup-card rounded-xl p-4">
+                                <p class="text-sm text-muted font-mono">
+                                    "Hey! Just wanted to check in and see how your week is going! No pressure to respond or anything haha just thinking about you..."
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 2 -->
+                    <div class="reveal reveal-delay-2 md:grid md:grid-cols-2 md:gap-16 md:items-center md:pt-16">
+                        <div class="md:order-2 md:text-left md:pl-12 mb-8 md:mb-0">
+                            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-accent text-white font-display font-bold text-lg mb-4">
+                                2
+                            </div>
+                            <h3 class="font-display font-bold text-2xl mb-2 text-white">
+                                Choose your intent
+                            </h3>
+                            <p class="text-muted leading-relaxed">
+                                Tell us what you want: more interest, clarity, a better tone, or a strategic re-engage.
+                            </p>
+                        </div>
+                        <div class="md:order-1 md:pr-12 md:text-right">
+                            <div class="mockup-card rounded-xl p-4 inline-block">
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="px-3 py-1.5 rounded-full bg-accent/20 text-accent text-sm font-medium">More confident</span>
+                                    <span class="px-3 py-1.5 rounded-full bg-border text-muted text-sm">Less available</span>
+                                    <span class="px-3 py-1.5 rounded-full bg-border text-muted text-sm">Create intrigue</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 3 -->
+                    <div class="reveal reveal-delay-3 md:grid md:grid-cols-2 md:gap-16 md:items-center md:pt-16">
+                        <div class="md:text-right md:pr-12 mb-8 md:mb-0">
+                            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-accent text-white font-display font-bold text-lg mb-4 md:float-right md:ml-6">
+                                3
+                            </div>
+                            <h3 class="font-display font-bold text-2xl mb-2 text-white">
+                                Get a confident rewrite instantly
+                            </h3>
+                            <p class="text-muted leading-relaxed">
+                                Receive polished versions, analysis, and actionable advice — all in seconds.
+                            </p>
+                        </div>
+                        <div class="md:pl-12">
+                            <div class="mockup-card rounded-xl p-4 border-accent/30">
+                                <p class="text-sm text-white font-mono">
+                                    "How's your week treating you?"
+                                </p>
+                                <div class="mt-3 flex items-center gap-2 text-xs text-accent">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                    <span>Confidence score: 94%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-24 px-6 relative">
+        <div class="absolute inset-0 bg-gradient-to-t from-transparent via-accent/5 to-transparent pointer-events-none"></div>
+        <div class="max-w-6xl mx-auto relative">
+            <div class="text-center mb-16 reveal">
+                <h2 class="font-display font-bold text-3xl sm:text-4xl lg:text-5xl mb-4">
+                    Simple monthly credits. No guessing.
+                </h2>
+                <p class="text-muted text-lg max-w-xl mx-auto">
+                    Start free. Upgrade when you need more clarity.
+                </p>
+            </div>
+            
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Free -->
+                <div class="pricing-card rounded-2xl p-6 reveal reveal-delay-1">
+                    <h3 class="font-display font-bold text-xl mb-2 text-white">Free</h3>
+                    <p class="text-muted text-sm mb-4">Try it out</p>
+                    <div class="mb-6">
+                        <span class="font-display font-bold text-4xl text-white">$0</span>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-2 text-sm text-muted">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff6b5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 flex-shrink-0">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            5 credits per month
+                        </li>
+                        <li class="flex items-start gap-2 text-sm text-muted">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff6b5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 flex-shrink-0">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Basic rewrite
+                        </li>
+                    </ul>
+                    <a href="auth.html" class="btn-secondary block text-center px-6 py-3 rounded-full font-semibold text-white focus-ring">
+                        Get Started
+                    </a>
+                </div>
+                
+                <!-- Starter -->
+                <div class="pricing-card rounded-2xl p-6 reveal reveal-delay-2">
+                    <h3 class="font-display font-bold text-xl mb-2 text-white">Starter</h3>
+                    <p class="text-muted text-sm mb-4">For casual daters</p>
+                    <div class="mb-6">
+                        <span class="font-display font-bold text-4xl text-white">$9</span>
+                        <span class="text-muted text-sm">/month</span>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-2 text-sm text-muted">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff6b5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 flex-shrink-0">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            60 credits per month
+                        </li>
+                        <li class="flex items-start gap-2 text-sm text-muted">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff6b5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 flex-shrink-0">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            All core features
+                        </li>
+                    </ul>
+                    <a href="auth.html" class="btn-secondary block text-center px-6 py-3 rounded-full font-semibold text-white focus-ring">
+                        Get Started
+                    </a>
+                </div>
+                
+                <!-- Pro - Popular -->
+                <div class="pricing-card pricing-popular rounded-2xl p-6 reveal reveal-delay-3 relative">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-accent rounded-full text-xs font-semibold text-white">
+                        Most Popular
+                    </div>
+                    <h3 class="font-display font-bold text-xl mb-2 text-white">Pro</h3>
+                    <p class="text-muted text-sm mb-4">Power users</p>
+                    <div class="mb-6">
+                        <span class="font-display font-bold text-4xl text-white">$19</span>
+                        <span class="text-muted text-sm">/month</span>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-2 text-sm text-muted">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff6b5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 flex-shrink-0">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            200 credits per month
+                        </li>
+                        <li class="flex items-start gap-2 text-sm text-muted">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff6b5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 flex-shrink-0">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Advanced analysis
+                        </li>
+                        <li class="flex items-start gap-2 text-sm text-muted">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff6b5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 flex-shrink-0">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Multi-version replies
+                        </li>
+                    </ul>
+                    <a href="auth.html" class="btn-primary block text-center px-6 py-3 rounded-full font-semibold text-white focus-ring">
+                        Get Started
+                    </a>
+                </div>
+                
+                <!-- Elite -->
+                <div class="pricing-card rounded-2xl p-6 reveal reveal-delay-4">
+                    <h3 class="font-display font-bold text-xl mb-2 text-white">Elite</h3>
+                    <p class="text-muted text-sm mb-4">Unlimited access</p>
+                    <div class="mb-6">
+                        <span class="font-display font-bold text-4xl text-white">$39</span>
+                        <span class="text-muted text-sm">/month</span>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-2 text-sm text-muted">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff6b5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 flex-shrink-0">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Unlimited credits
+                        </li>
+                        <li class="flex items-start gap-2 text-sm text-muted">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff6b5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 flex-shrink-0">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Priority processing
+                        </li>
+                    </ul>
+                    <a href="auth.html" class="btn-secondary block text-center px-6 py-3 rounded-full font-semibold text-white focus-ring">
+                        Get Started
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="py-24 px-6 relative">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-16 reveal">
+                <h2 class="font-display font-bold text-3xl sm:text-4xl lg:text-5xl mb-4">
+                    Real clarity. Real confidence.
+                </h2>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <blockquote class="testimonial-card rounded-2xl p-8 reveal reveal-delay-1">
+                    <div class="flex gap-1 mb-4">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff6b5b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff6b5b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff6b5b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff6b5b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff6b5b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </div>
+                    <p class="text-white/90 leading-relaxed mb-6">
+                        "I finally stopped spiraling after every date. The conversation analysis showed me patterns I was completely blind to."
+                    </p>
+                    <footer class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-accent/30 to-accent/10"></div>
+                        <div>
+                            <p class="font-semibold text-white text-sm">Mia T.</p>
+                            <p class="text-muted text-xs">New York, NY</p>
+                        </div>
+                    </footer>
+                </blockquote>
+                
+                <blockquote class="testimonial-card rounded-2xl p-8 reveal reveal-delay-2">
+                    <div class="flex gap-1 mb-4">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff6b5b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff6b5b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff6b5b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff6b5b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff6b5b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </div>
+                    <p class="text-white/90 leading-relaxed mb-6">
+                        "The re-engagement suggestions actually worked. I reconnected with someone I thought I'd lost — without looking desperate."
+                    </p>
+                    <footer class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-accent/30 to-accent/10"></div>
+                        <div>
+                            <p class="font-semibold text-white text-sm">Alex R.</p>
+                            <p class="text-muted text-xs">Austin, TX</p>
+                        </div>
+                    </footer>
+                </blockquote>
+                
+                <blockquote class="testimonial-card rounded-2xl p-8 reveal reveal-delay-3">
+                    <div class="flex gap-1 mb-4">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff6b5b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff6b5b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff6b5b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff6b5b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff6b5b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </div>
+                    <p class="text-white/90 leading-relaxed mb-6">
+                        "The red flag checker saved me from a 3-month situationship that would have ended badly. Wish I had this sooner."
+                    </p>
+                    <footer class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-accent/30 to-accent/10"></div>
+                        <div>
+                            <p class="font-semibold text-white text-sm">Jordan K.</p>
+                            <p class="text-muted text-xs">Los Angeles, CA</p>
+                        </div>
+                    </footer>
+                </blockquote>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="py-24 px-6 relative">
+        <div class="absolute inset-0 bg-gradient-to-t from-accent/10 to-transparent pointer-events-none"></div>
+        <div class="max-w-3xl mx-auto text-center relative">
+            <div class="reveal">
+                <h2 class="font-display font-bold text-3xl sm:text-4xl lg:text-5xl mb-6">
+                    Stop chasing. Start attracting.
+                </h2>
+                <p class="text-muted text-lg mb-10 max-w-xl mx-auto">
+                    Join thousands who've transformed their dating communication. No more overthinking.
+                </p>
+                <a href="auth.html" class="btn-primary inline-flex items-center gap-2 px-10 py-4 rounded-full text-lg font-semibold text-white focus-ring">
+                    Get Started Free
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                <p class="mt-6 text-sm text-muted">
+                    No credit card required.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-border py-12 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="flex items-center gap-8">
+                    <a href="#" class="font-display font-bold text-lg text-white">
+                        Stop Chasing
+                    </a>
+                    <nav class="flex items-center gap-6">
+                        <a href="#" class="text-muted hover:text-white transition-colors text-sm focus-ring">Privacy</a>
+                        <a href="#" class="text-muted hover:text-white transition-colors text-sm focus-ring">Terms</a>
+                        <a href="#" class="text-muted hover:text-white transition-colors text-sm focus-ring">Contact</a>
+                    </nav>
+                </div>
+                <p class="text-muted text-sm">
+                    © 2024 Stop Chasing. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize reveal elements
+        const revealElements = document.querySelectorAll('.reveal');
+        
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+        
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+        
+        // Check for reduced motion preference
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        
+        if (prefersReducedMotion) {
+            revealElements.forEach(el => el.classList.add('visible'));
+        } else {
+            revealElements.forEach(el => revealObserver.observe(el));
+        }
+        
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Subtle parallax on hero mockup
+        if (!prefersReducedMotion) {
+            const mockup = document.querySelector('.animate-float');
+            if (mockup) {
+                let ticking = false;
+                window.addEventListener('scroll', () => {
+                    if (!ticking) {
+                        window.requestAnimationFrame(() => {
+                            const scrolled = window.scrollY;
+                            if (scrolled < 800) {
+                                mockup.style.transform = `translateY(${scrolled * 0.05}px)`;
+                            }
+                            ticking = false;
+                        });
+                        ticking = true;
+                    }
+                });
+            }
+        }
+        
+        // Button ripple effect
+        document.querySelectorAll('.btn-primary, .btn-secondary').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (prefersReducedMotion) return;
+                
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const ripple = document.createElement('span');
+                ripple.style.cssText = `
+                    position: absolute;
+                    background: rgba(255,255,255,0.3);
+                    border-radius: 50%;
+                    transform: scale(0);
+                    animation: ripple 0.6s linear;
+                    left: ${x}px;
+                    top: ${y}px;
+                    width: 100px;
+                    height: 100px;
+                    margin-left: -50px;
+                    margin-top: -50px;
+                    pointer-events: none;
+                `;
+                
+                this.style.position = 'relative';
+                this.style.overflow = 'hidden';
+                this.appendChild(ripple);
+                
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+        
+        // Add ripple animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
