@@ -541,166 +541,205 @@
             </div>
         </div>
     </div>
-     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-      
-        // ==================== SUPABASE INIT ====================
-        const SUPABASE_URL = 'https://rwcwuugxlfjqxnkwdavt.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3Y3d1dWd4bGZqcXhua3dkYXZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2ODMzMzMsImV4cCI6MjA4NjI1OTMzM30.ZscCHxYa2LWw60yB2XKhbo9b8Qs3iZKeJZYhIzPUifw';
-        
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // ==================== SUPABASE INIT ====================
+    const SUPABASE_URL = 'https://hjyzqhjfhzcdcrplkhur.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqeXpxaGpmaHpjZGNycGxraHVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNjYzMDIsImV4cCI6MjA4Njk0MjMwMn0.W8sgjGgkleXER8TauGagfxhbMvXwYo784NyKWxE_KF8';
 
-        // ==================== REDIRECT IF LOGGED IN ====================
-        (async () => {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                window.location.href = 'dashboard.html';
-            }
-        })();
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ==================== UI HELPERS ====================
-        const errorDiv = document.getElementById('auth-error');
-        function showError(message) {
-            errorDiv.textContent = message;
-            errorDiv.classList.add('show');
-        }
-        function clearError() {
-            errorDiv.textContent = '';
-            errorDiv.classList.remove('show');
-        }
-        function setLoading(button, isLoading) {
-            if (isLoading) {
-                button.disabled = true;
-                button.innerHTML = '<span class="opacity-0">Loading...</span><div class="absolute inset-0 flex items-center justify-center"><svg class="animate-spin h-5 w-5 text-bg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>';
-            } else {
-                button.disabled = false;
-                button.innerHTML = button.id === 'signin-btn' ? 'Sign In' : 'Create My Account';
-            }
-        }
+    // ==================== TOAST NOTIFICATION ====================
+    const toastContainer = document.createElement('div');
+    toastContainer.className = 'fixed top-4 right-4 z-50 flex flex-col gap-3';
+    document.body.appendChild(toastContainer);
 
-        // ==================== TAB SWITCHING ====================
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const formPanels = document.querySelectorAll('.form-panel');
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const targetTab = btn.dataset.tab;
-                tabBtns.forEach(b => {
-                    b.classList.remove('active', 'text-accent');
-                    b.classList.add('text-muted');
-                    b.setAttribute('aria-selected', 'false');
-                });
-                btn.classList.add('active');
-                btn.classList.remove('text-muted');
-                btn.setAttribute('aria-selected', 'true');
-                formPanels.forEach(panel => panel.classList.remove('active'));
-                document.getElementById(`${targetTab}-panel`).classList.add('active');
-                clearError();
+    function showToast(message, type = 'info', duration = 5000) {
+        const toast = document.createElement('div');
+        const bgColor = type === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-400' :
+                        type === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' :
+                        'bg-accent/10 border-accent/30 text-accent';
+        toast.className = `max-w-sm ${bgColor} border rounded-lg px-4 py-3 shadow-lg flex items-start gap-3 animate-fade`;
+        toast.innerHTML = `
+            <div class="flex-1 text-sm">${message}</div>
+            <button class="text-white/50 hover:text-white" onclick="this.parentElement.remove()">✕</button>
+        `;
+        toastContainer.appendChild(toast);
+        setTimeout(() => toast.remove(), duration);
+    }
+
+    // ==================== REDIRECT IF LOGGED IN ====================
+    (async () => {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) {
+            window.location.href = 'dashboard.html';
+        }
+    })();
+
+    // ==================== UI HELPERS ====================
+    const errorDiv = document.getElementById('auth-error');
+    function showError(message) {
+        errorDiv.textContent = message;
+        errorDiv.classList.add('show');
+        showToast(message, 'error');
+    }
+    function clearError() {
+        errorDiv.textContent = '';
+        errorDiv.classList.remove('show');
+    }
+
+    function setLoading(button, isLoading) {
+        if (isLoading) {
+            button.disabled = true;
+            const originalText = button.id === 'signin-btn' ? 'Sign In' : 'Create My Account';
+            button.dataset.originalText = originalText;
+            button.innerHTML = '<span class="opacity-0">Loading...</span><div class="absolute inset-0 flex items-center justify-center"><svg class="animate-spin h-5 w-5 text-bg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>';
+        } else {
+            button.disabled = false;
+            button.innerHTML = button.dataset.originalText || (button.id === 'signin-btn' ? 'Sign In' : 'Create My Account');
+        }
+    }
+
+    // ==================== TAB SWITCHING ====================
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const formPanels = document.querySelectorAll('.form-panel');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.dataset.tab;
+            tabBtns.forEach(b => {
+                b.classList.remove('active', 'text-accent');
+                b.classList.add('text-muted');
+                b.setAttribute('aria-selected', 'false');
             });
+            btn.classList.add('active');
+            btn.classList.remove('text-muted');
+            btn.setAttribute('aria-selected', 'true');
+            formPanels.forEach(panel => panel.classList.remove('active'));
+            document.getElementById(`${targetTab}-panel`).classList.add('active');
+            clearError();
+        });
+    });
+
+    // ==================== PASSWORD TOGGLE ====================
+    window.togglePassword = function(inputId, button) {
+        const input = document.getElementById(inputId);
+        const eyeOpen = button.querySelector('.eye-open');
+        const eyeClosed = button.querySelector('.eye-closed');
+        if (input.type === 'password') {
+            input.type = 'text';
+            eyeOpen.classList.add('hidden');
+            eyeClosed.classList.remove('hidden');
+        } else {
+            input.type = 'password';
+            eyeOpen.classList.remove('hidden');
+            eyeClosed.classList.add('hidden');
+        }
+    };
+
+    // ==================== SIGN IN ====================
+    document.getElementById('signin-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearError();
+
+        const email = document.getElementById('signin-email').value;
+        const password = document.getElementById('signin-password').value;
+        const btn = document.getElementById('signin-btn');
+
+        setLoading(btn, true);
+
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email,
+            password
         });
 
-        // ==================== PASSWORD TOGGLE ====================
-        window.togglePassword = function(inputId, button) {
-            const input = document.getElementById(inputId);
-            const eyeOpen = button.querySelector('.eye-open');
-            const eyeClosed = button.querySelector('.eye-closed');
-            if (input.type === 'password') {
-                input.type = 'text';
-                eyeOpen.classList.add('hidden');
-                eyeClosed.classList.remove('hidden');
+        setLoading(btn, false);
+
+        if (error) {
+            if (error.message.includes('Invalid login credentials')) {
+                showError('Incorrect email or password. Please try again.');
+            } else if (error.message.includes('Email not confirmed')) {
+                showError('Please confirm your email address before signing in.');
             } else {
-                input.type = 'password';
-                eyeOpen.classList.remove('hidden');
-                eyeClosed.classList.add('hidden');
-            }
-        };
-
-        // ==================== SIGN IN ====================
-        document.getElementById('signin-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            clearError();
-
-            const email = document.getElementById('signin-email').value;
-            const password = document.getElementById('signin-password').value;
-            const btn = document.getElementById('signin-btn');
-
-            setLoading(btn, true);
-
-            const { data, error } = await supabaseClient.auth.signInWithPassword({
-                email,
-                password
-            });
-
-            setLoading(btn, false);
-
-            if (error) {
                 showError(error.message);
-            } else {
-                window.location.href = 'dashboard.html';
             }
+        } else {
+            showToast('Signed in successfully!', 'success');
+            window.location.href = 'dashboard.html';
+        }
+    });
+
+    // ==================== SIGN UP ====================
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearError();
+
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
+        const confirm = document.getElementById('signup-confirm').value;
+        const acceptTerms = document.getElementById('accept-terms').checked;
+        const btn = document.getElementById('signup-btn');
+
+        if (!acceptTerms) {
+            showError('You must accept the Terms of Service and Privacy Policy.');
+            return;
+        }
+
+        if (password !== confirm) {
+            showError('Passwords do not match');
+            return;
+        }
+        if (password.length < 6) {
+            showError('Password must be at least 6 characters');
+            return;
+        }
+
+        setLoading(btn, true);
+
+        const { data, error } = await supabaseClient.auth.signUp({
+            email,
+            password
         });
 
-        // ==================== SIGN UP ====================
-        document.getElementById('signup-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            clearError();
+        setLoading(btn, false);
 
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
-            const confirm = document.getElementById('signup-confirm').value;
-            const acceptTerms = document.getElementById('accept-terms').checked;
-            const btn = document.getElementById('signup-btn');
-
-            if (!acceptTerms) {
-                showError('You must accept the Terms of Service and Privacy Policy.');
-                return;
-            }
-
-            if (password !== confirm) {
-                showError('Passwords do not match');
-                return;
-            }
-            if (password.length < 6) {
-                showError('Password must be at least 6 characters');
-                return;
-            }
-
-            setLoading(btn, true);
-
-            const { data, error } = await supabaseClient.auth.signUp({
-                email,
-                password
-            });
-
-            setLoading(btn, false);
-
-            if (error) {
-                showError(error.message);
+        if (error) {
+            if (error.message.includes('User already registered')) {
+                showError('This email is already registered. Please sign in instead.');
             } else {
-                if (data.user && data.user.identities && data.user.identities.length === 0) {
-                    showError('This email is already registered. Please sign in instead.');
+                showError(error.message);
+            }
+        } else {
+            if (data.user && data.user.identities && data.user.identities.length === 0) {
+                showError('This email is already registered. Please sign in instead.');
+            } else {
+                if (data.session) {
+                    // Auto-confirmed (e.g., if disable email confirm)
+                    showToast('Account created successfully!', 'success');
+                    window.location.href = 'dashboard.html';
                 } else {
-                    if (data.session) {
-                        window.location.href = 'dashboard.html';
-                    } else {
-                        alert('Check your email for a confirmation link!');
-                        document.querySelector('[data-tab="signin"]').click();
-                    }
+                    // Email confirmation required
+                    showToast('Check your email for a confirmation link!', 'success');
+                    // Switch to sign in tab
+                    document.querySelector('[data-tab="signin"]').click();
+                    // Pre-fill email?
+                    document.getElementById('signin-email').value = email;
                 }
             }
-        });
-
-        // ==================== PASSWORD MATCH LIVE FEEDBACK ====================
-        const pwd = document.getElementById('signup-password');
-        const confirmPwd = document.getElementById('signup-confirm');
-        if (confirmPwd) {
-            confirmPwd.addEventListener('input', () => {
-                if (confirmPwd.value !== pwd.value) {
-                    confirmPwd.setCustomValidity('Passwords do not match');
-                } else {
-                    confirmPwd.setCustomValidity('');
-                }
-            });
         }
-    </script>
+    });
+
+    // ==================== PASSWORD MATCH LIVE FEEDBACK ====================
+    const pwd = document.getElementById('signup-password');
+    const confirmPwd = document.getElementById('signup-confirm');
+    if (confirmPwd) {
+        confirmPwd.addEventListener('input', () => {
+            if (confirmPwd.value !== pwd.value) {
+                confirmPwd.setCustomValidity('Passwords do not match');
+            } else {
+                confirmPwd.setCustomValidity('');
+            }
+        });
+    }
+</script>
 </body>
 </html>
